@@ -1,0 +1,738 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Padhai Buddy</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap">
+<style>
+/* Layout: badge + headline left / blurb right, then three columns — notes setup | chat-style quiz | revision queue — stacking on phones. Single dark look matching the reference. */
+:root{
+  --bg:#121212; --surface:#1c1c1c; --raised:#252525; --ink:#ededed; --muted:#9a9a9a; --line:#2f2f2f; --line-strong:#3a3a3a;
+  --accent:#ededed; --accent-ink:#141414; --accent-soft:#2a2a2a;
+  --good:#6fcf8f; --good-soft:#1b2a20; --bad:#f0a070; --bad-soft:#2e2219;
+  --chat-bg:#161616; --bubble:#252525; --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 30px rgba(0,0,0,.35);
+  --display:"Inter","Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Inter","Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:56px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+header{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:20px 48px}
+.badge{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:500;color:var(--ink);background:var(--raised);border:1px solid var(--line-strong);border-radius:999px;padding:4px 11px}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.logo{width:30px;height:30px;border-radius:9px;background:var(--raised);border:1px solid var(--line-strong);display:grid;place-items:center;color:var(--ink);font-weight:600;font-size:14px;line-height:1}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(30px,3.6vw,40px);line-height:1.15;margin:18px 0 0;text-wrap:balance;letter-spacing:-.025em;max-width:16ch}
+.lede{color:var(--muted);margin:66px 0 0;max-width:46ch;font-size:14px;line-height:1.6}
+@media (max-width:720px){.lede{margin-top:0}}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr) minmax(0,.85fr);gap:20px;align-items:start}
+@media (max-width:1080px){.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.rev{grid-column:1/-1}}
+@media (max-width:720px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+.card{background:var(--surface);border:1px solid var(--line-strong);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.card h2{font-family:var(--display);font-weight:600;font-size:16px;margin:0;line-height:1.3;letter-spacing:-.01em}
+.label{font-size:12px;color:var(--muted);font-weight:500}
+textarea{width:100%;min-height:230px;resize:vertical;border:1px solid var(--line-strong);border-radius:12px;padding:12px;font:inherit;font-size:13.5px;line-height:1.6;background:var(--raised);color:var(--ink)}
+textarea:focus,input:focus,select:focus{outline:1px solid var(--muted);outline-offset:1px}
+.row{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid transparent;background:transparent;color:var(--muted);border-radius:999px;padding:6px 13px;font:inherit;font-size:12.5px;cursor:pointer;transition:color .15s,background .15s}
+.chip:hover{color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--raised);border-color:var(--line-strong);color:var(--ink);font-weight:500}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.field{display:flex;flex-direction:column;gap:7px}
+.meta{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--muted)}.meta span:last-child{flex:none;font-variant-numeric:tabular-nums}
+.btn{border:0;border-radius:999px;padding:11px 18px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:var(--raised);color:var(--ink);border:1px solid var(--line-strong)}
+.quick .chip{background:var(--raised);border-color:var(--line-strong);color:var(--ink)}
+.btn:disabled{opacity:.55;cursor:default}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.status{font-size:13px;color:var(--muted);min-height:1.5em}
+.status.err{color:var(--bad)}
+
+/* chat */
+.phone{background:var(--surface);border:1px solid var(--line-strong);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;height:680px;min-width:0}
+.ph-top{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.ph-top .logo{width:36px;height:36px;border-radius:50%}
+.ph-name{font-weight:600;font-size:14px}
+.ph-sub{font-size:12px;color:var(--muted)}
+.ph-score{margin-left:auto;font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
+.ph-score b{display:block;color:var(--ink);font-size:15px}
+.chat{flex:1;overflow-y:auto;background:var(--chat-bg);padding:16px 12px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;animation:pop .22s ease-out}
+.bot{align-self:flex-start;background:var(--bubble);border:1px solid var(--line-strong);border-top-left-radius:4px}
+.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-top-right-radius:4px}
+.tag{display:inline-block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:4px;white-space:normal}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:10px;white-space:normal}
+.opt{text-align:left;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 11px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;gap:9px;align-items:flex-start}
+.opt b{flex:none;width:20px;height:20px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:10.5px;color:var(--muted);font-weight:600}
+.opt:hover:not(:disabled){border-color:var(--muted);background:var(--raised)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.verdict{font-weight:600}
+.verdict.ok{color:var(--good)} .verdict.no{color:var(--bad)}
+.src{margin-top:8px;padding:8px 10px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:13px;white-space:normal}
+.src .label{display:block;margin-bottom:2px;font-size:10px}
+.typing{align-self:flex-start;background:var(--bubble);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;gap:4px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+.quick{display:flex;flex-wrap:wrap;gap:6px;align-self:flex-start}
+.ph-bar{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--surface)}
+.ph-bar input{flex:1;min-width:0;border:1px solid var(--line-strong);border-radius:999px;padding:9px 14px;font:inherit;font-size:14px;background:var(--bg);color:var(--ink)}
+.send{width:40px;height:40px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;display:grid;place-items:center;flex:none}
+@keyframes pop{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+/* revision */
+.nudge{border:1px solid var(--line-strong);border-radius:14px;padding:12px;background:var(--bg);display:flex;gap:10px}
+.nudge .logo{width:28px;height:28px;border-radius:8px;font-size:17px;flex:none}
+.nudge-h{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.nudge p{margin:2px 0 0;font-size:13.5px}
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.rung{border:1px solid var(--line-strong);border-radius:10px;padding:8px 4px;font-size:12px;color:var(--muted)}
+.rung b{display:block;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums;font-weight:600}
+.qlist{display:flex;flex-direction:column;gap:8px;list-style:none;margin:0;padding:0;max-height:300px;overflow-y:auto}
+.qi{border:1px solid var(--line-strong);background:var(--raised);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.qi p{margin:0;font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qi-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.due{font-weight:600;border-radius:999px;padding:2px 9px;font-size:11.5px;background:var(--accent-soft);color:var(--accent)}
+.due.now{background:var(--bad-soft);color:var(--bad)}
+.dots{display:flex;gap:3px}.dots span{width:7px;height:7px;border-radius:50%;background:var(--line)}.dots span.on{background:var(--accent)}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:16px;font-size:13.5px;color:var(--muted);text-align:center}
+.linkbtn{background:none;border:0;padding:0;font:inherit;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer;align-self:flex-start}
+/* app bar */
+html{scroll-behavior:smooth}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.appbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;margin:-56px calc(-1 * max(16px,env(safe-area-inset-right,0px))) 40px calc(-1 * max(16px,env(safe-area-inset-left,0px)));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:var(--bg);background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.appbar-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:16px;height:56px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;color:var(--ink);text-decoration:none}
+.navlinks{display:flex;gap:2px;margin-left:auto}
+.navlinks a{color:var(--muted);text-decoration:none;font-size:13px;padding:6px 12px;border-radius:999px}
+.navlinks a:hover,.navlinks a:focus-visible{color:var(--ink);background:var(--raised)}
+.btn.sm{padding:7px 13px;font-size:12.5px;font-weight:500}
+@media (max-width:520px){.brand span:last-child{display:none}.navlinks a{padding:6px 9px}}
+:target{scroll-margin-top:calc(72px + env(safe-area-inset-top,0px))}
+.phone,#study,#revision,#about{scroll-margin-top:calc(72px + env(safe-area-inset-top,0px))}
+
+/* pdf upload */
+.field-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#pdf:focus-visible + *,.field-head label.btn:focus-within{outline:1px solid var(--muted)}
+.drop{position:relative}
+.drop-hint{position:absolute;inset:0;border:1.5px dashed var(--muted);border-radius:12px;background:color-mix(in srgb,var(--raised) 92%,transparent);display:none;place-items:center;font-weight:500;color:var(--ink)}
+.drop.over .drop-hint{display:grid}
+.meta span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* about: same pattern as the reference FAQ — topics on the left, expandable rows on the right */
+.about{display:flex;flex-direction:column;gap:40px;padding-top:24px}
+.about-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:20px 48px}
+.about-head h2{font-weight:400;font-size:clamp(28px,3.4vw,38px);letter-spacing:-.025em;line-height:1.15;margin:18px 0 0;text-wrap:balance;max-width:16ch}
+.faq{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr);gap:20px 36px;align-items:start}
+.faq-side{display:flex;flex-direction:column;justify-content:space-between;gap:28px;align-self:stretch}
+.tabs{display:flex;flex-direction:column;gap:6px}
+.tab{border:1px solid transparent;background:transparent;color:var(--muted);border-radius:999px;padding:9px 16px;font:inherit;font-size:13px;cursor:pointer;text-align:center;transition:color .15s,background .15s}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--raised);border-color:var(--line-strong);color:var(--ink);font-weight:500}
+.tab:focus-visible,.qa summary:focus-visible,.textbtn:focus-visible{outline:1px solid var(--muted);outline-offset:2px}
+.side-card{background:var(--surface);border:1px solid var(--line-strong);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.side-card h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.side-card p{margin:0;font-size:13px;color:var(--muted);line-height:1.6}
+.textbtn{background:none;border:0;padding:0;margin-top:8px;font:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;align-self:flex-start}
+.textbtn:hover{text-decoration:underline}
+.side-card .status{font-size:12px;min-height:0}
+.faq-main{min-width:0}
+.panel{display:flex;flex-direction:column;gap:10px}
+.qa{background:var(--raised);border:1px solid var(--line-strong);border-radius:12px;transition:border-color .15s}
+.qa[open]{border-color:var(--muted)}
+.qa summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 18px;font-size:14px;font-weight:500;color:var(--ink)}
+.qa summary::-webkit-details-marker{display:none}
+.chev{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;color:var(--muted);transition:transform .2s}
+.qa[open] .chev{transform:rotate(180deg);color:var(--ink)}
+.qa-body{padding:0 18px 18px;font-size:13.5px;line-height:1.7;color:var(--muted);max-width:68ch}
+.qa-body b{color:var(--ink);font-weight:500}
+.mini{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.mini li::marker{color:var(--muted)}
+@media (max-width:760px){
+  .faq{grid-template-columns:minmax(0,1fr)}
+  .faq-side{display:contents}
+  .tabs{flex-direction:row;flex-wrap:wrap;order:0}
+  .faq-main{order:1}
+  .side-card{order:2}
+}
+/* touch devices: comfortable tap targets, and 16px inputs so iPhones don't zoom on focus */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,a,summary,label.btn{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+@media (pointer:coarse){
+  .navlinks a,.chip,.tab,.btn.sm{min-height:40px;display:inline-flex;align-items:center;justify-content:center}
+  .linkbtn,.textbtn{min-height:40px;display:inline-flex;align-items:center}
+  .opt{min-height:44px;align-items:center}
+  .send{width:44px;height:44px}
+  .chat .quick .chip{min-height:40px}
+}
+@media (max-width:720px),(pointer:coarse){textarea,.ph-bar input{font-size:16px}}
+/* content-visibility lets the browser skip rendering the FAQ until it's near the screen */
+.about{content-visibility:auto;contain-intrinsic-size:auto 900px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+@media (max-width:720px){.phone{height:min(620px,calc(100dvh - 88px));min-height:420px}}
+@media (max-height:520px) and (orientation:landscape){.phone{height:calc(100dvh - 72px);min-height:300px}.appbar{position:static}}
+</style>
+
+<nav class="appbar" aria-label="App">
+  <div class="appbar-in">
+    <a class="brand" href="#study"><span class="logo">P</span><span>Padhai Buddy</span></a>
+    <div class="navlinks">
+      <a href="#study">Study</a>
+      <a href="#revision">Revision</a>
+      <a href="#about">About</a>
+    </div>
+    <button class="btn ghost sm" id="install" type="button" hidden>Install app</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header id="study">
+    <div>
+      <span class="badge">Padhai Buddy</span>
+      <h1>Paste your notes. Get quizzed one question at a time.</h1>
+    </div>
+    <p class="lede">Exam-style questions built only from what you wrote, in English, Hindi or Hinglish. Anything you miss comes back tomorrow, then in 3 days, then in 7.</p>
+  </header>
+
+  <div class="grid">
+    <!-- setup -->
+    <section class="card" aria-labelledby="h-notes">
+      <h2 id="h-notes">Your notes</h2>
+      <div class="field">
+        <div class="field-head">
+          <label class="label" for="notes">Paste notes or upload a PDF</label>
+          <label class="btn ghost sm" for="pdf">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0l-5 5m5-5l5 5M5 20h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Upload PDF
+          </label>
+          <input type="file" id="pdf" accept="application/pdf,.pdf" class="sr">
+        </div>
+        <div class="drop" id="drop">
+          <textarea id="notes" spellcheck="false"></textarea>
+          <div class="drop-hint" aria-hidden="true">Drop your PDF here</div>
+        </div>
+        <div class="meta"><span id="source">Sample: NEET Biology, Photosynthesis</span><span id="count"></span></div>
+      </div>
+      <div class="field">
+        <span class="label" id="l-style">Exam style</span>
+        <div class="row" role="group" aria-labelledby="l-style" id="style"></div>
+      </div>
+      <div class="field">
+        <span class="label" id="l-lang">Quiz language</span>
+        <div class="row" role="group" aria-labelledby="l-lang" id="lang"></div>
+      </div>
+      <div class="field">
+        <span class="label" id="l-n">Questions</span>
+        <div class="row" role="group" aria-labelledby="l-n" id="num"></div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="gen" type="button">Generate quiz</button>
+        <button class="btn ghost" id="stop" type="button" hidden>Stop</button>
+        <button class="btn ghost" id="useSample" type="button">Play sample quiz</button>
+      </div>
+      <div class="status" id="status" role="status"></div>
+    </section>
+
+    <!-- chat -->
+    <section class="phone" aria-label="Quiz chat">
+      <div class="ph-top">
+        <span class="logo">P</span>
+        <div><div class="ph-name">Padhai Buddy</div><div class="ph-sub" id="topic">Photosynthesis · NEET</div></div>
+        <div class="ph-score"><b id="score">0 / 0</b>score</div>
+      </div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <form class="ph-bar" id="bar">
+        <input id="reply" autocomplete="off" placeholder="Tap an option or type A, B, C, D">
+        <button class="send" type="submit" aria-label="Send answer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z" fill="currentColor"/></svg>
+        </button>
+      </form>
+    </section>
+
+    <!-- revision -->
+    <section class="card rev" id="revision" aria-labelledby="h-rev">
+      <h2 id="h-rev">Revision queue</h2>
+      <div class="nudge" aria-label="Reminder preview">
+        <span class="logo">P</span>
+        <div style="min-width:0">
+          <div class="nudge-h"><span>Padhai Buddy</span><span id="nudgeWhen">tomorrow, 7:00 PM</span></div>
+          <p id="nudgeText"></p>
+        </div>
+      </div>
+      <div class="ladder" aria-label="Spaced repetition stages">
+        <div class="rung"><b id="r0">0</b>1 day</div>
+        <div class="rung"><b id="r1">0</b>3 days</div>
+        <div class="rung"><b id="r2">0</b>7 days</div>
+        <div class="rung"><b id="r3">0</b>mastered</div>
+      </div>
+      <ul class="qlist" id="qlist"></ul>
+      <div class="actions">
+        <button class="btn primary" id="review" type="button">Revise due questions</button>
+      </div>
+      <button class="linkbtn" id="skip" type="button">Demo: jump ahead one day</button>
+    </section>
+  </div>
+
+  <section class="about" id="about" aria-labelledby="h-about">
+    <header class="about-head">
+      <div>
+        <span class="badge">Know more</span>
+        <h2 id="h-about">Know more about Padhai Buddy.</h2>
+      </div>
+      <p class="lede">How your notes become a quiz, how revision works, and what happens to your data along the way.</p>
+    </header>
+
+    <div class="faq">
+      <aside class="faq-side">
+        <div class="tabs" role="tablist" aria-label="Topics">
+        <button type="button" class="tab" role="tab" id="tab-how" aria-controls="panel-how" aria-selected="true">How it works</button>
+        <button type="button" class="tab" role="tab" id="tab-data" aria-controls="panel-data" aria-selected="false">Your data</button>
+        <button type="button" class="tab" role="tab" id="tab-exams" aria-controls="panel-exams" aria-selected="false">Exams & languages</button>
+        </div>
+        <div class="side-card">
+          <h3>Your notes stay with you</h3>
+          <p>Everything is saved in this browser only. Wipe it whenever you like.</p>
+          <button class="textbtn" id="clear" type="button">Clear my data →</button>
+          <span class="status" id="clearStatus" role="status"></span>
+        </div>
+      </aside>
+      <div class="faq-main">
+      <div class="panel" role="tabpanel" id="panel-how" aria-labelledby="tab-how">
+        <details class="qa" open>
+          <summary>What is Padhai Buddy?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">A study buddy that turns your own notes into exam-style practice questions, asks them one at a time in a chat, and brings back the ones you get wrong until you've learned them.</div>
+        </details>
+        <details class="qa">
+          <summary>How does it turn my notes into questions?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body"><ol class='mini'><li>Paste your notes or upload a PDF.</li><li>Pick an exam style, a language and how many questions you want.</li><li>Press <b>Generate quiz</b>. Claude writes questions using only what's in your notes.</li><li>Answer in the chat. Each answer shows the sentence from your notes that proves it.</li></ol></div>
+        </details>
+        <details class="qa">
+          <summary>Can I upload a PDF?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">Yes. Use <b>Upload PDF</b> or drop the file onto the notes box. The text is pulled out in your browser and shown in the box, so you can check or trim it before generating. Scanned PDFs (photos of pages) have no selectable text, so paste those notes instead.</div>
+        </details>
+        <details class="qa">
+          <summary>How does revision work?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">Every question you miss joins your revision queue. It comes back <b>1 day</b> later, then after <b>3 days</b>, then after <b>7 days</b>. Get it right at each stage and it's marked mastered. Miss it again and it starts over from 1 day.</div>
+        </details>
+        <details class="qa">
+          <summary>How do I answer?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">Tap an option, or type A, B, C or D in the message box. When questions are due, typing START begins your revision.</div>
+        </details>
+      </div>
+      <div class="panel" role="tabpanel" id="panel-data" aria-labelledby="tab-data" hidden>
+        <details class="qa" open>
+          <summary>Where are my notes saved?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">Only in this browser, on this device. Your notes, revision queue and progress are kept in the browser's own storage. There's no account and no copy on a server.</div>
+        </details>
+        <details class="qa">
+          <summary>Does my PDF get uploaded?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">No. The PDF is opened and read inside your browser. Only the text you see in the notes box is kept, and the file itself never leaves your device.</div>
+        </details>
+        <details class="qa">
+          <summary>What is sent when I press Generate?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">Just the note text, once, to Claude so it can write your questions. Nothing is sent while you type, upload a PDF or answer questions.</div>
+        </details>
+        <details class="qa">
+          <summary>Do I need an account?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">No. Open the page and start. Because there's no account, your progress doesn't sync between devices.</div>
+        </details>
+        <details class="qa">
+          <summary>How do I delete everything?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">Use <b>Clear my data</b> on this page, or clear your browser's site data. Either removes everything Padhai Buddy saved on this device.</div>
+        </details>
+      </div>
+      <div class="panel" role="tabpanel" id="panel-exams" aria-labelledby="tab-exams" hidden>
+        <details class="qa" open>
+          <summary>Which exams does it support?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body"><ul class='mini'><li><b>NEET</b>: one-correct MCQs, assertion–reason and match the column.</li><li><b>JEE Main</b>: conceptual MCQs, plus numericals when your notes have numbers.</li><li><b>UPSC Prelims</b>: statement-based questions.</li><li><b>CBSE Boards</b>: competency-based MCQs and assertion–reason.</li><li><b>Simple MCQ</b>: quick revision for anything else.</li></ul></div>
+        </details>
+        <details class="qa">
+          <summary>Can I get questions in Hindi?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">Yes. Choose <b>हिन्दी</b> for Hindi in Devanagari, or <b>Hinglish</b> for Hindi in Roman script mixed with English terms. Your notes can be in either language.</div>
+        </details>
+        <details class="qa">
+          <summary>How do I know the answers are right?<span class="chev" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+          <div class="qa-body">Questions are written only from your notes, and every answer shows the line from your notes that backs it up. A ✓ means that line matches your notes word for word.</div>
+        </details>
+      </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const SAMPLE_NOTES = `Photosynthesis — Light reactions (NEET Bio, Ch. 13)
+
+Light reactions take place in the thylakoid membranes of the chloroplast.
+Photosystem II (P680) absorbs light first and splits water by photolysis, releasing oxygen.
+The oxygen released in photosynthesis comes from water, not from carbon dioxide.
+Electrons move from Photosystem II to Photosystem I (P700) through the cytochrome b6f complex.
+At the end of the non-cyclic electron flow, NADP+ is reduced to NADPH.
+ATP synthase makes ATP as protons flow from the lumen to the stroma; this is chemiosmosis.
+Cyclic photophosphorylation involves only Photosystem I and produces ATP but no NADPH or oxygen.
+
+Dark reactions (Calvin cycle)
+The Calvin cycle takes place in the stroma.
+RuBisCO fixes carbon dioxide to RuBP.
+C3 plants use 3 ATP and 2 NADPH for every CO2 molecule fixed.`;
+
+const AR_OPTS = ["Both A and R are true, and R is the correct explanation of A","Both A and R are true, but R is not the correct explanation of A","A is true, but R is false","A is false, but R is true"];
+
+const SAMPLE_QUIZ = {topic:"Photosynthesis", questions:[
+ {type:"mcq",q:"Where do the light reactions of photosynthesis take place?",options:["Stroma of the chloroplast","Thylakoid membranes","Cytoplasm","Mitochondrial matrix"],answer:1,source:"Light reactions take place in the thylakoid membranes of the chloroplast.",explain:"Light-harvesting complexes and both photosystems sit in the thylakoid membranes."},
+ {type:"assertion_reason",q:"Assertion (A): The oxygen released in photosynthesis comes from water.\nReason (R): Photolysis of water takes place at Photosystem II.",options:AR_OPTS,answer:0,source:"Photosystem II (P680) absorbs light first and splits water by photolysis, releasing oxygen.",explain:"Water is split at PS II, and that splitting is exactly where the O₂ comes from, so R explains A."},
+ {type:"mcq",q:"Cyclic photophosphorylation produces:",options:["ATP only","ATP and NADPH","NADPH and oxygen","ATP, NADPH and oxygen"],answer:0,source:"Cyclic photophosphorylation involves only Photosystem I and produces ATP but no NADPH or oxygen.",explain:"Only PS I is involved, so there is no water splitting and no NADP⁺ reduction."},
+ {type:"match",q:"Match Column I with Column II:\n(a) P680   (i) Fixes CO₂\n(b) P700   (ii) Photosystem I\n(c) RuBisCO   (iii) Photosystem II\n(d) ATP synthase   (iv) Chemiosmosis",options:["a-iii, b-ii, c-i, d-iv","a-ii, b-iii, c-i, d-iv","a-iii, b-ii, c-iv, d-i","a-i, b-ii, c-iii, d-iv"],answer:0,source:"RuBisCO fixes carbon dioxide to RuBP.",explain:"P680 is PS II's reaction centre, P700 is PS I's, RuBisCO fixes CO₂ and ATP synthase drives chemiosmosis."},
+ {type:"mcq",q:"How much ATP and NADPH does a C3 plant use for each CO₂ molecule fixed?",options:["2 ATP and 3 NADPH","3 ATP and 2 NADPH","3 ATP and 3 NADPH","2 ATP and 2 NADPH"],answer:1,source:"C3 plants use 3 ATP and 2 NADPH for every CO2 molecule fixed.",explain:"Remember the ratio 3:2, ATP first."},
+ {type:"mcq",q:"Electrons pass from Photosystem II to Photosystem I through the:",options:["Cytochrome b6f complex","ATP synthase","RuBisCO","Stroma"],answer:0,source:"Electrons move from Photosystem II to Photosystem I (P700) through the cytochrome b6f complex.",explain:"Cytochrome b6f links the two photosystems in the electron transport chain."}
+]};
+
+const STYLES = [
+ {id:"neet",label:"NEET",desc:"NEET (UG) style: one-correct MCQs; include at least one assertion-reason and one match-the-column question"},
+ {id:"jee",label:"JEE Main",desc:"JEE Main style: conceptual and application MCQs; include a numerical question if the notes contain numbers"},
+ {id:"upsc",label:"UPSC Prelims",desc:"UPSC Prelims style: mostly statement-based questions ('Consider the following statements… Which of the statements given above is/are correct?') with options like '1 only', '2 only', 'Both 1 and 2', 'Neither 1 nor 2'"},
+ {id:"cbse",label:"CBSE Boards",desc:"CBSE board exam style: competency-based MCQs plus assertion-reason questions"},
+ {id:"mcq",label:"Simple MCQ",desc:"plain multiple-choice questions for quick revision"}
+];
+const LANGS = [
+ {id:"en",label:"English",desc:"English"},
+ {id:"hi",label:"हिन्दी",desc:"Hindi in Devanagari script, using the terms Hindi-medium textbooks use (keep standard symbols like CO2, ATP)"},
+ {id:"hn",label:"Hinglish",desc:"Hinglish: Hindi written in Roman script mixed with English technical terms, friendly tutor tone"}
+];
+const NUMS = [5,8,10];
+const TYPE_LABEL = {mcq:"MCQ",assertion_reason:"Assertion–Reason",match:"Match the column",statement:"Statements",numerical:"Numerical"};
+const DAY = 864e5, STAGES = [1,3,7];
+
+const $ = id => document.getElementById(id);
+const notesEl = $("notes"), chat = $("chat"), statusEl = $("status");
+const opt = {style:"neet", lang:"en", n:8};
+let quiz = null, list = [], idx = 0, right = 0, mode = "quiz", wrongIds = [], awaiting = false, busy = false, ctl = null;
+
+/* storage (per-viewer convenience) */
+function load(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch{ return d; } }
+function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+let queue = load("pb_queue", []);
+let offset = load("pb_offset", 0);
+const now = () => Date.now() + offset * DAY;
+
+/* setup controls */
+function chips(el, items, key, labelOf){
+  el.innerHTML = "";
+  items.forEach(it => {
+    const val = typeof it === "object" ? it.id : it;
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.textContent = labelOf(it);
+    b.setAttribute("aria-pressed", String(opt[key] === val));
+    b.onclick = () => { opt[key] = val; [...el.children].forEach(c => c.setAttribute("aria-pressed", String(c === b))); };
+    el.append(b);
+  });
+}
+chips($("style"), STYLES, "style", s => s.label);
+chips($("lang"), LANGS, "lang", l => l.label);
+chips($("num"), NUMS, "n", n => String(n));
+notesEl.value = load("pb_notes", SAMPLE_NOTES);
+const updCount = () => { const w = notesEl.value.trim().split(/\s+/).filter(Boolean).length; $("count").textContent = w + " words"; };
+notesEl.addEventListener("input", () => { updCount(); save("pb_notes", notesEl.value); });
+updCount();
+
+/* chat helpers */
+function bubble(cls, html){ const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html; chat.append(d); scroll(); return d; }
+function scroll(){ requestAnimationFrame(() => chat.scrollTop = chat.scrollHeight); }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function typing(){ const t = document.createElement("div"); t.className = "typing"; t.innerHTML = "<i></i><i></i><i></i>"; chat.append(t); scroll(); return t; }
+function quick(labels){
+  const w = document.createElement("div"); w.className = "quick";
+  labels.forEach(([text, fn]) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = text; b.onclick = () => { w.remove(); bubble("me", esc(text)); fn(); }; w.append(b); });
+  chat.append(w); scroll();
+}
+const norm = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const inNotes = src => src && norm(notesEl.value).includes(norm(src));
+function setScore(){ $("score").textContent = right + " / " + (mode === "quiz" ? list.length : list.length); }
+
+/* quiz flow */
+function showChat(){
+  const r = document.querySelector(".phone").getBoundingClientRect();
+  if (r.top < 60 || r.bottom > innerHeight) document.querySelector(".phone").scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
+}
+function start(q, m, items, quiet){
+  if (!quiet) showChat();
+  quiz = q; mode = m; list = items; idx = 0; right = 0; wrongIds = [];
+  chat.innerHTML = ""; setScore();
+  $("topic").textContent = (q.topic || "Your notes") + " · " + (m === "review" ? "Revision" : STYLES.find(s => s.id === opt.style)?.label || "");
+  bubble("bot", m === "review"
+    ? `Revision time. ${items.length} question${items.length > 1 ? "s" : ""} you missed earlier. Get one right and it moves up a stage.`
+    : `Here's your quiz on <b>${esc(q.topic || "your notes")}</b>: ${items.length} questions, one at a time. Every answer comes straight from your notes.`);
+  setTimeout(ask, 400);
+}
+function ask(){
+  const q = list[idx]; awaiting = true;
+  const d = bubble("bot", `<span class="tag">Q${idx + 1}/${list.length} · ${esc(TYPE_LABEL[q.type] || "MCQ")}</span>\n${esc(q.q)}`);
+  const o = document.createElement("div"); o.className = "opts";
+  q.options.forEach((t, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "opt";
+    b.innerHTML = `<b>${"ABCD"[i]}</b><span>${esc(t)}</span>`;
+    b.onclick = () => answer(i);
+    o.append(b);
+  });
+  d.append(o); d._opts = o; list[idx]._el = d; scroll();
+}
+function answer(i){
+  if (!awaiting) return; awaiting = false;
+  const q = list[idx], ok = i === q.answer, btns = [...q._el._opts.children];
+  btns.forEach((b, j) => { b.disabled = true; if (j === q.answer) b.classList.add("right"); else if (j === i) b.classList.add("wrong"); });
+  bubble("me", `${"ABCD"[i]}. ${esc(q.options[i])}`);
+  if (ok) right++;
+  setScore();
+  const verified = inNotes(q.source);
+  const src = q.source ? `<div class="src"><span class="label">${verified ? "From your notes ✓" : "Basis in your notes"}</span>${esc(q.source)}</div>` : "";
+  const t = typing();
+  setTimeout(() => {
+    t.remove();
+    bubble("bot", `<span class="verdict ${ok ? "ok" : "no"}">${ok ? "Correct." : "Not quite. Answer: " + "ABCD"[q.answer] + "."}</span> ${esc(q.explain || "")}${src}`);
+    track(q, ok);
+    idx++;
+    if (idx < list.length) setTimeout(ask, 700); else setTimeout(finish, 700);
+  }, 550);
+}
+function finish(){
+  const missed = list.length - right;
+  let msg = `<b>${right}/${list.length}</b> ${right === list.length ? "— perfect round." : ""}`;
+  if (mode === "quiz") msg += missed ? `\n${missed} question${missed > 1 ? "s" : ""} saved to your revision queue. I'll bring ${missed > 1 ? "them" : "it"} back tomorrow.` : "\nNothing to revise. Paste the next chapter when you're ready.";
+  else msg += `\nCorrect ones moved up a stage. Missed ones reset to tomorrow.`;
+  bubble("bot", msg);
+  const opts = [["Quiz me again", () => start(quiz, "quiz", fresh(quiz.questions))]];
+  if (dueItems().length) opts.unshift(["Revise due now", reviewDue]);
+  quick(opts);
+  renderQueue();
+}
+const fresh = qs => qs.map(q => ({...q, _el: undefined}));
+
+/* spaced repetition */
+const keyOf = q => norm(q.q).slice(0, 120);
+function track(q, ok){
+  const k = keyOf(q), it = queue.find(x => x.k === k);
+  const clean = {type:q.type,q:q.q,options:q.options,answer:q.answer,source:q.source,explain:q.explain};
+  if (mode === "quiz"){
+    if (!ok){ if (it){ it.stage = 0; it.due = now() + DAY; } else queue.push({k, q:clean, topic:quiz.topic || "Notes", stage:0, due:now() + DAY}); }
+  } else if (it){
+    if (ok){ it.stage++; it.due = it.stage < 3 ? now() + STAGES[it.stage] * DAY : Infinity; }
+    else { it.stage = 0; it.due = now() + DAY; }
+  }
+  save("pb_queue", queue.map(x => ({...x, due: x.due === Infinity ? null : x.due})));
+}
+queue.forEach(x => { if (x.due === null) x.due = Infinity; });
+const dueItems = () => queue.filter(x => x.stage < 3 && x.due <= now() + 60e3);
+function reviewDue(){
+  const d = dueItems();
+  if (!d.length){ bubble("bot", "Nothing is due yet. Missed questions come back the next day."); return; }
+  start({topic: d[0].topic, questions: []}, "review", d.map(x => ({...x.q})));
+}
+function whenLabel(ms){
+  const days = Math.round((ms - now()) / DAY);
+  if (ms <= now() + 60e3) return ["Due now", true];
+  return [days <= 1 ? "Tomorrow" : "In " + days + " days", false];
+}
+function renderQueue(){
+  const active = queue.filter(x => x.stage < 3).sort((a, b) => a.due - b.due);
+  [0,1,2,3].forEach(s => $("r" + s).textContent = queue.filter(x => Math.min(x.stage, 3) === s).length);
+  const ul = $("qlist"); ul.innerHTML = "";
+  if (!active.length){
+    ul.innerHTML = `<li class="empty">Questions you miss land here. Each one returns after 1 day, then 3, then 7, until you've got it.</li>`;
+  } else active.forEach(x => {
+    const [lbl, isNow] = whenLabel(x.due);
+    const li = document.createElement("li"); li.className = "qi";
+    li.innerHTML = `<p>${esc(x.q.q.split("\n")[0])}</p><div class="qi-meta"><span class="due ${isNow ? "now" : ""}">${lbl}</span><span class="dots" aria-label="Stage ${x.stage + 1} of 3">${[0,1,2].map(s => `<span class="${s <= x.stage ? "on" : ""}"></span>`).join("")}</span></div>`;
+    ul.append(li);
+  });
+  const due = dueItems().length, next = active[0];
+  $("review").disabled = !due;
+  $("review").textContent = due ? `Revise due questions (${due})` : "Nothing due yet";
+  if (due){ $("nudgeWhen").textContent = "now"; $("nudgeText").textContent = `${due} question${due > 1 ? "s" : ""} from ${next.topic} ${due > 1 ? "are" : "is"} due. Reply START to revise in 2 minutes.`; }
+  else if (next){ $("nudgeWhen").textContent = whenLabel(next.due)[0].toLowerCase() + ", 7:00 PM"; $("nudgeText").textContent = `${active.length} question${active.length > 1 ? "s" : ""} from ${next.topic} coming back. Reply START to revise.`; }
+  else { $("nudgeWhen").textContent = "preview"; $("nudgeText").textContent = "Your daily reminder appears here once you miss a question. Example: “3 questions from Photosynthesis are due. Reply START.”"; }
+}
+$("review").onclick = reviewDue;
+$("skip").onclick = () => { offset++; save("pb_offset", offset); renderQueue(); statusEl.className = "status"; statusEl.textContent = "Demo clock moved forward " + offset + " day" + (offset > 1 ? "s" : "") + "."; };
+
+/* typed answers */
+$("bar").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = $("reply").value.trim().toUpperCase(); $("reply").value = "";
+  if (!v) return;
+  if (!awaiting){ if (v === "START") { bubble("me", "START"); reviewDue(); } return; }
+  const i = "ABCD".indexOf(v[0]) >= 0 ? "ABCD".indexOf(v[0]) : "1234".indexOf(v[0]);
+  if (i >= 0 && i < list[idx].options.length) answer(i);
+  else bubble("bot", "Reply with A, B, C or D.");
+});
+
+/* generation */
+/* Inside Claude the page asks Claude directly; deployed as a web app it calls its own /api/quiz route. */
+const STANDALONE = !window.claude;
+let samplePromise = window.claude?.use ? window.claude.use("sample") : Promise.resolve(null);
+async function viaServer(signal){
+  let res;
+  try{
+    res = await fetch("/api/quiz", {method:"POST", headers:{"Content-Type":"application/json"}, signal,
+      body: JSON.stringify({notes: notesEl.value.slice(0, 20000), style: opt.style, lang: opt.lang, n: opt.n})});
+  }catch(e){ if (e?.name === "AbortError") throw {code:"cancelled"}; throw {code:"upstream_error"}; }
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw {code: body?.code || (res.status === 429 ? "rate_limited" : "upstream_error")};
+  return body;
+}
+function buildPrompt(){
+  const s = STYLES.find(x => x.id === opt.style), l = LANGS.find(x => x.id === opt.lang);
+  return `You write exam practice questions for an Indian student strictly from the student's own notes.
+
+Exam style: ${s.desc}.
+Language of questions, options and explanations: ${l.desc}.
+Number of questions: exactly ${opt.n}.
+
+Rules:
+- Every question and its correct answer must be supported by the notes. Use no outside facts.
+- Each question has exactly 4 options and exactly one correct answer. Wrong options must be plausible.
+- "source": copy ONE sentence from the notes word for word (in the notes' own language) that proves the answer.
+- "explain": one short sentence on why the answer is right.
+- type is one of "mcq", "assertion_reason", "match", "statement", "numerical".
+- For assertion_reason, put "Assertion (A): ...\\nReason (R): ..." in "q" and use these 4 options in this order: ${JSON.stringify(AR_OPTS)} (translated if needed).
+- For match, put both columns in "q" on separate lines like "(a) X   (i) Y", and make each option a code like "a-iii, b-ii, c-i, d-iv".
+- Vary which option letter is correct.
+
+Reply with only JSON in this shape:
+{"topic":"2-4 word topic name","questions":[{"type":"mcq","q":"...","options":["...","...","...","..."],"answer":0,"source":"...","explain":"..."}]}
+
+Notes:
+"""
+${notesEl.value.slice(0, 20000)}
+"""`;
+}
+function valid(data){
+  const qs = Array.isArray(data?.questions) ? data.questions : [];
+  return qs.filter(q => typeof q?.q === "string" && Array.isArray(q.options) && q.options.length === 4 && q.options.every(o => typeof o === "string") && Number.isInteger(Number(q.answer)) && Number(q.answer) >= 0 && Number(q.answer) < 4)
+           .map(q => ({type:String(q.type || "mcq"), q:q.q, options:q.options, answer:Number(q.answer), source:typeof q.source === "string" ? q.source : "", explain:typeof q.explain === "string" ? q.explain : ""}));
+}
+const ERR = {not_granted:"Claude access wasn't allowed for this page, so I loaded the sample quiz.",sampling_disabled:"Claude isn't available on this account. Loaded the sample quiz.",rate_limited:"Too many requests right now. Try again in a minute.",invalid_json:"The quiz came back malformed. Try Generate again.",refused:"Claude couldn't make a quiz from these notes. Try different notes.",prompt_too_large:"Those notes are too long. Paste one chapter at a time.",session_expired:"Sign in to Claude again, then retry.",not_configured:"Quiz generation isn't set up on this site yet (the server has no API key). Playing the sample quiz meanwhile.",invalid_request:"Those notes couldn't be used. Paste at least a paragraph and try again."};
+$("gen").onclick = async () => {
+  if (busy) return;
+  if (notesEl.value.trim().split(/\s+/).length < 25){ statusEl.className = "status err"; statusEl.textContent = "Paste at least a paragraph of notes (25+ words)."; return; }
+  const sample = await samplePromise;
+  if (!sample && !STANDALONE){ statusEl.className = "status"; statusEl.textContent = "Live generation isn't available in this view. Playing the sample quiz instead."; start(SAMPLE_QUIZ, "quiz", fresh(SAMPLE_QUIZ.questions)); return; }
+  busy = true; $("gen").disabled = true; $("stop").hidden = false;
+  statusEl.className = "status"; statusEl.textContent = "Reading your notes and writing questions…";
+  chat.innerHTML = ""; bubble("me", "Here are my notes, quiz me"); const t = typing();
+  ctl = new AbortController();
+  try{
+    const data = sample ? await sample.json(buildPrompt(), {signal: ctl.signal, cache: false}) : await viaServer(ctl.signal);
+    const qs = valid(data);
+    t.remove();
+    if (!qs.length) throw {code:"invalid_json"};
+    statusEl.textContent = `${qs.length} questions ready. ${qs.filter(q => inNotes(q.source)).length} answers matched word for word to your notes.`;
+    start({topic: data.topic || "Your notes", questions: qs}, "quiz", fresh(qs));
+  }catch(e){
+    t.remove();
+    if (e?.code === "cancelled"){ statusEl.textContent = "Stopped."; }
+    else {
+      statusEl.className = "status err"; statusEl.textContent = ERR[e?.code] || "Something went wrong reaching Claude. Try Generate again.";
+      if (e?.code === "not_configured"){ start(SAMPLE_QUIZ, "quiz", fresh(SAMPLE_QUIZ.questions)); }
+      else if (e?.code === "not_granted" || e?.code === "sampling_disabled"){ samplePromise = Promise.resolve(null); start(SAMPLE_QUIZ, "quiz", fresh(SAMPLE_QUIZ.questions)); }
+      else bubble("bot", "I couldn't build that quiz. Hit Generate to try again.");
+    }
+  }finally{ busy = false; $("gen").disabled = false; $("stop").hidden = true; }
+};
+$("stop").onclick = () => ctl?.abort();
+$("useSample").onclick = () => { if (!busy){ statusEl.className = "status"; statusEl.textContent = ""; start(SAMPLE_QUIZ, "quiz", fresh(SAMPLE_QUIZ.questions)); } };
+
+/* PDF upload: read in the browser with pdf.js; only the extracted text is kept */
+// The web app ships its own copy of pdf.js (works offline); inside Claude it loads from cdnjs.
+const PDFJS = STANDALONE ? "/vendor/pdfjs/" : "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/";
+let pdfReady = null;
+function loadScript(src){ return new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.append(s); }); }
+function loadPdfJs(){
+  // Loading the worker as a plain script lets pdf.js parse on the main thread, with no separate worker file to fetch.
+  if (!pdfReady) pdfReady = loadScript(PDFJS + "pdf.min.js").then(() => loadScript(PDFJS + "pdf.worker.min.js")).then(() => window.pdfjsLib).catch(e => { pdfReady = null; throw e; });
+  return pdfReady;
+}
+async function readPdf(file){
+  if (!file) return;
+  if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)){ setStatus("That file isn't a PDF. Upload a .pdf file or paste your notes.", true); return; }
+  if (file.size > 25 * 1024 * 1024){ setStatus("That PDF is over 25 MB. Upload one chapter at a time.", true); return; }
+  setStatus("Reading " + file.name + " on your device…");
+  try{
+    const lib = await loadPdfJs();
+    const doc = await lib.getDocument({data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false}).promise;
+    const pages = Math.min(doc.numPages, 60), out = [];
+    for (let p = 1; p <= pages; p++){
+      const page = await doc.getPage(p), tc = await page.getTextContent();
+      let line = "", lastY = null;
+      const lines = [];
+      for (const it of tc.items){
+        const y = it.transform ? Math.round(it.transform[5]) : lastY;
+        if (lastY !== null && y !== lastY && line.trim()){ lines.push(line.trim()); line = ""; }
+        line += it.str + (it.hasEOL ? "\n" : " "); lastY = y;
+      }
+      if (line.trim()) lines.push(line.trim());
+      out.push(lines.join("\n"));
+      if (p % 5 === 0) setStatus(`Reading ${file.name}: page ${p} of ${pages}…`);
+    }
+    const text = out.join("\n\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+    if (text.split(/\s+/).length < 25){ setStatus("This PDF looks scanned (it has no selectable text). Paste the notes as text instead.", true); return; }
+    notesEl.value = text.slice(0, 20000); updCount(); save("pb_notes", notesEl.value);
+    $("source").textContent = "From " + file.name + (doc.numPages > pages ? ` (first ${pages} of ${doc.numPages} pages)` : ` · ${doc.numPages} page${doc.numPages > 1 ? "s" : ""}`);
+    setStatus(text.length > 20000 ? "PDF read on your device. It's long, so the first part is used. Press Generate quiz." : "PDF read on your device. Check the text, then press Generate quiz.");
+  }catch(e){
+    setStatus(String(e?.name) === "PasswordException" ? "That PDF is password-protected. Remove the password and try again." : "Couldn't read that PDF. Try another file or paste the text.", true);
+  }
+}
+function setStatus(msg, err){ statusEl.className = "status" + (err ? " err" : ""); statusEl.textContent = msg; }
+$("pdf").addEventListener("change", e => { readPdf(e.target.files[0]); e.target.value = ""; });
+const drop = $("drop");
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { if ([...(e.dataTransfer?.types || [])].includes("Files")){ e.preventDefault(); drop.classList.add("over"); } }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, () => drop.classList.remove("over")));
+drop.addEventListener("drop", e => { const f = e.dataTransfer?.files?.[0]; if (f){ e.preventDefault(); readPdf(f); } });
+
+/* know more tabs */
+const tabEls = [...document.querySelectorAll(".tab")];
+function selectTab(t){
+  tabEls.forEach(x => { const on = x === t; x.setAttribute("aria-selected", String(on)); x.tabIndex = on ? 0 : -1; $(x.getAttribute("aria-controls")).hidden = !on; });
+}
+tabEls.forEach((t, i) => {
+  t.tabIndex = i === 0 ? 0 : -1;
+  t.onclick = () => selectTab(t);
+  t.onkeydown = e => {
+    const d = {ArrowDown:1,ArrowRight:1,ArrowUp:-1,ArrowLeft:-1}[e.key];
+    if (d){ e.preventDefault(); const n = tabEls[(i + d + tabEls.length) % tabEls.length]; selectTab(n); n.focus(); }
+  };
+});
+
+/* clear on-device data */
+$("clear").onclick = () => {
+  ["pb_queue","pb_offset","pb_notes"].forEach(k => { try{ localStorage.removeItem(k); }catch{} });
+  queue = []; offset = 0; notesEl.value = SAMPLE_NOTES; updCount();
+  $("source").textContent = "Sample: NEET Biology, Photosynthesis";
+  renderQueue();
+  $("clearStatus").textContent = "Cleared. Nothing from Padhai Buddy is saved on this device now.";
+};
+
+/* installable web app (only when deployed on its own site) */
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("install").hidden = false; });
+$("install").onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; $("install").hidden = true; };
+if (STANDALONE && "serviceWorker" in navigator && location.protocol === "https:"){
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
+
+/* initial state: sample quiz waiting on Q1 */
+renderQueue();
+start(SAMPLE_QUIZ, "quiz", fresh(SAMPLE_QUIZ.questions), true);
+</script>
+
+</body></html>
