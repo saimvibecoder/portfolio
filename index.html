@@ -1,0 +1,423 @@
+<title>Saim Nusarat</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Mrs+Saint+Delafield&display=swap">
+<style>
+/* Layout: 448px content column under a hero ring of glass orbs; project galleries bleed full width; content card lifts off a scene-grey footer */
+:root{
+  color-scheme:light;
+  --background:#fff; --scene:#f3f3f1; --foreground:#555; --muted:#767676; --heading:#171717; --preview:#e8e7e2;
+  --content:448px; --aspect-project:2874/1524;
+  --font-sans:"Inter", Arial, Helvetica, sans-serif;
+  --font-sig:"Mrs Saint Delafield", "Brush Script MT", cursive;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--scene);color:var(--foreground);font-family:var(--font-sans);font-size:15px;line-height:24px;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+a:focus-visible,button:focus-visible{outline:2px solid var(--foreground);outline-offset:5px;border-radius:2px}
+p,h1,h2,h3,dl,dd{margin:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.skip{position:absolute;left:-999px}.skip:focus{left:16px;top:16px;z-index:60;background:#fff;padding:12px;border-radius:4px}
+
+main{position:relative;isolation:isolate;min-height:100svh;background:var(--scene)}
+.sheet{position:relative;z-index:1;overflow:clip;background:var(--background);box-shadow:0 1px 0 #00000006;transform-origin:bottom center;will-change:transform}
+
+/* hero */
+.hero{--hero-height:75svh;--ring:min(320px,37vw,calc(var(--hero-height)*.38));position:relative;height:var(--hero-height);min-height:460px;display:grid;place-items:center;overflow:visible}
+.ring{position:absolute;inset:0;pointer-events:none}
+.orb{--s:clamp(56px,calc(var(--ring)*.54),128px);position:absolute;left:50%;top:50%;width:var(--s);height:var(--s);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2);border-radius:50%;
+  pointer-events:auto;cursor:grab;touch-action:none;will-change:transform;
+  box-shadow:rgba(255,255,255,.4) 0 0 5px inset,rgba(0,0,0,.06) 0 10px 18px -6px,rgba(0,0,0,.05) 0 2px 5px}
+.orb i{position:absolute;inset:0;border-radius:50%;overflow:hidden;background-size:130%;background-position:center;transform:scale(1.04)}
+.orb i::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,transparent 52%,rgba(0,0,0,.08) 70%,rgba(0,0,0,.38) 100%)}
+.orb i::after{content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(ellipse 34% 22% at 34% 22%,rgba(255,255,255,.55),rgba(255,255,255,0) 70%),
+             radial-gradient(circle at 66% 80%,rgba(255,255,255,.18),rgba(255,255,255,0) 30%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),inset 0 -6px 14px rgba(0,0,0,.18)}
+.hero-copy{position:relative;z-index:1;width:min(340px,calc(var(--ring)*1.24));text-align:center;animation:fade .9s ease both .15s}
+.sig{display:flex;justify-content:center;margin-bottom:16px;font-family:var(--font-sig);font-weight:400;font-size:46px;line-height:40px;color:var(--heading);letter-spacing:.01em}
+.sig span{display:inline-block;padding:0 6px;animation:write 1.8s cubic-bezier(.6,.1,.3,1) both .35s}
+@keyframes write{from{clip-path:inset(-20% 100% -20% 0)}to{clip-path:inset(-20% -5% -20% 0)}}
+@keyframes fade{from{opacity:.001;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hero-copy p{color:var(--muted);font-size:clamp(14px,1.6vw,16px);line-height:1.55;text-wrap:balance}
+
+/* content */
+.content{position:relative;padding-top:64px;padding-bottom:144px}
+.col{margin:0 auto;width:min(var(--content),calc(100% - 48px));display:flex;flex-direction:column;gap:112px}
+.col>section{scroll-margin-top:32px}
+h2{position:relative;color:var(--heading);font-size:15px;font-weight:500;line-height:24px;margin-bottom:16px}
+h2.tight{margin-bottom:8px}
+h2 .n{position:absolute;top:0;right:calc(100% + 4px);width:16px;color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.stack{display:grid;gap:24px;color:var(--muted)}
+.works{display:grid;gap:80px;min-width:0}
+article{display:flex;flex-direction:column;gap:12px;min-width:0;max-width:var(--content)}
+article>p{color:var(--muted)}
+.ph{display:flex;width:fit-content;align-items:center;gap:12px}
+.ph svg.logo{width:40px;height:40px;flex:none}
+.ph h3{font-size:15px;font-weight:500;line-height:24px;color:var(--heading)}
+.ph p{color:var(--muted)}
+.arr{display:inline-block;width:6px;height:16px;margin-left:2px;vertical-align:text-top;transition:transform .2s,opacity .2s}
+.ph .arr{opacity:0}
+.ph:hover .arr,.ph:focus-visible .arr{opacity:1;transform:translate(1px,-1px)}
+a.ph:not([href]) {cursor:default}
+
+/* gallery */
+.gallery{width:100vw;max-width:none;margin-left:calc(224px - 50vw);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline-start:calc(50vw - 224px);scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 var(--fs,0px),#000 calc(100% - var(--fe,40px)),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 var(--fs,0px),#000 calc(100% - var(--fe,40px)),transparent 100%)}
+.gallery::-webkit-scrollbar{display:none}
+.track{display:flex;width:max-content;align-items:flex-start;gap:14px;padding-left:calc(50vw - 224px)}
+.track>.end{width:calc(50vw - 84px);flex:none}
+.card{position:relative;width:var(--content);aspect-ratio:var(--aspect-project);max-width:100%;flex:none;scroll-snap-align:start;scroll-snap-stop:always;container-type:inline-size}
+.card>button{position:relative;display:block;width:100%;height:100%;overflow:hidden;border:0;padding:0;border-radius:4px;background:var(--preview) center/cover no-repeat;box-shadow:0 5px 15px #00000012;cursor:zoom-in;appearance:none;font:inherit;text-align:left}
+.shot{position:absolute;inset:5%;filter:drop-shadow(0 8px 14px #18160f2e);display:flex}
+.shot.n1{inset:12% 21%}.shot.n2{inset:11% 22%}.shot.n3{inset:6% 12%}
+
+.gnav{display:flex;justify-content:flex-end;gap:8px;margin-top:-2px}
+.gnav button{width:32px;height:32px;border-radius:50%;border:1px solid #e4e3de;background:#fff;color:var(--heading);display:grid;place-items:center;cursor:pointer;transition:background .15s,opacity .15s}
+.gnav button:hover{background:#f3f3f1}.gnav button:disabled{opacity:.35;cursor:default}
+.gnav svg{width:14px;height:14px}
+.gallery.grab{cursor:grab}.gallery.dragging{cursor:grabbing;scroll-snap-type:none}.gallery.dragging .card>button{cursor:grabbing}
+.bgimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;user-select:none;-webkit-user-drag:none}
+.shotimg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:86%;width:auto;max-width:92%;object-fit:cover;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 8px 14px #18160f2e,0 2px 4px #18160f1f;user-select:none;-webkit-user-drag:none}
+/* mini app windows (sized in container units so they scale with the card) */
+.w{flex:1;min-width:0;display:flex;flex-direction:column;background:#fbfbfa;border-radius:1.4cqw;border:1px solid rgba(0,0,0,.08);overflow:hidden;font-size:1.75cqw;line-height:1.4;color:#2a2a28;font-family:var(--font-sans)}
+.w.dark{background:#111214;color:#e9eaee;border-color:rgba(255,255,255,.08)}
+.tb{display:flex;align-items:center;gap:.45em;padding:.6em .8em;border-bottom:1px solid rgba(0,0,0,.06);flex:none}
+.dark .tb{border-color:rgba(255,255,255,.07)}
+.tb i{width:.62em;height:.62em;border-radius:50%;background:#d9d8d3}.dark .tb i{background:#34363c}
+.tb span{margin:0 auto;color:#9a9a95;font-size:.82em;padding-right:2.2em;white-space:nowrap}
+.bd{flex:1;min-height:0;display:flex;overflow:hidden}
+.side{width:30%;flex:none;border-right:1px solid rgba(0,0,0,.06);padding:.8em .7em;background:#f4f4f1;display:flex;flex-direction:column;gap:.35em}
+.side b{font-weight:500;font-size:.8em;color:#9a9a95;text-transform:uppercase;letter-spacing:.06em;margin:.3em 0 .1em}
+.side span{padding:.25em .5em;border-radius:.4em;color:#55554f}.side span.on{background:#e7e6e1;color:#1d1d1b}
+.mn{flex:1;min-width:0;padding:.9em 1em;display:flex;flex-direction:column;gap:.55em}
+.h{font-weight:500;font-size:1.25em;color:#1b1b19;line-height:1.2}.dark .h{color:#f2f3f6}
+.m{color:#8d8d87}.dark .m{color:#8b8f99}
+.r{display:flex;align-items:center;gap:.55em}.sb{justify-content:space-between}
+.li{display:flex;align-items:center;gap:.6em;padding:.38em 0;border-bottom:1px solid rgba(0,0,0,.05)}
+.av{width:1.8em;height:1.8em;border-radius:50%;flex:none;display:grid;place-items:center;font-size:.72em;font-weight:500;color:#fff}
+.chip{font-size:.78em;padding:.15em .6em;border-radius:99px;border:1px solid rgba(0,0,0,.09);color:#6b6b66;background:#fff;white-space:nowrap}
+.chip.k{background:#1b1b19;color:#fff;border-color:transparent}
+.dark .chip{background:#1b1d22;border-color:#2a2d34;color:#a9adb7}
+.btn{display:inline-block;padding:.35em .9em;border-radius:99px;background:#1b1b19;color:#fff;font-size:.85em;font-weight:500;white-space:nowrap}
+.inp{border:1px solid rgba(0,0,0,.1);border-radius:.6em;padding:.6em .7em;background:#fff;color:#8d8d87}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6em}
+.ph-img{border-radius:.5em;background-size:cover;background-position:center}
+.term{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em}
+
+/* experience / ventures */
+dl.tl{display:grid;gap:12px}
+dl.tl>div{display:grid;grid-template-columns:89px minmax(0,1fr);gap:35px}
+dl.tl dt{white-space:nowrap;color:var(--muted)}
+dl.tl dd{color:var(--foreground)}
+dl.tl dd span{display:block;color:var(--muted)}
+dl.tl a:hover{color:var(--heading)}
+
+/* folders: geometry taken from the reference */
+.lead{max-width:360px;margin-bottom:32px;color:var(--muted)}
+.folders{display:grid;grid-template-columns:repeat(2,1fr);column-gap:24px;row-gap:30px}
+.folder-link{display:block;min-width:0;border-radius:10px}
+.folder-shell{--folder-color:#aaa9a3;--folder-edge:#94938e;aspect-ratio:1.34/1;perspective:520px;width:100%;max-width:100%;transform-style:preserve-3d;filter:drop-shadow(rgba(0,0,0,.08) 0 10px 9px) drop-shadow(rgba(0,0,0,.047) 0 2px 2px);display:block;position:relative}
+.folder-back{position:absolute;inset:5% 7% 4%;overflow:visible;width:86%;height:91%}
+.folder-back path{fill:var(--folder-color);stroke:var(--folder-edge);stroke-width:1px;vector-effect:non-scaling-stroke}
+.folder-paper{transform-origin:center bottom;background:#f7f7f3;border:1px solid #ddddd7;border-radius:8px 8px 6px 6px;height:66%;padding:17% 10% 10%;transition:transform .36s cubic-bezier(.2,.75,.2,1);position:absolute;bottom:14%;left:14%;right:14%;overflow:hidden;box-shadow:rgba(0,0,0,.05) 0 1px 2px}
+.fp1{transform:translateY(6%) rotate(-2deg)}.fp2{transform:translateY(11%) rotate(1.25deg)}.fp3{transform:translateY(17%) rotate(-.75deg)}
+.paper-line{background:#dedfd8;border-radius:99px;width:100%;height:4px;margin-bottom:7px;display:block}
+.pl-s{width:48%}.pl-m{width:72%}
+.paper-dot{aspect-ratio:1/1;background:#e2e2dc;border-radius:50%;width:15%;position:absolute;top:13%;right:10%}
+.folder-front{z-index:2;border:1px solid var(--folder-edge);background:linear-gradient(115deg,#ffffff12 0 25%,transparent 45%),linear-gradient(160deg,color-mix(in oklab,var(--folder-color) 82%,#fff),var(--folder-color) 55%,color-mix(in oklab,var(--folder-color) 86%,#000));transform-origin:center bottom;height:65%;transform-style:preserve-3d;border-radius:8px 8px 15px 15px;justify-content:space-between;align-items:flex-end;padding:0 7% 6%;transition:transform .36s cubic-bezier(.2,.75,.2,1);display:flex;position:absolute;bottom:3%;left:7%;right:7%;overflow:hidden;transform:rotateX(-20deg);box-shadow:rgba(255,255,255,.35) 0 1px inset,color-mix(in oklab,var(--folder-edge) 30%,transparent) 0 -18px 28px inset}
+.folder-front::after{content:"";mix-blend-mode:soft-light;opacity:.34;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");position:absolute;inset:0}
+.folder-front span{position:relative;z-index:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:500;line-height:20px;letter-spacing:-.01em;color:var(--heading);text-shadow:0 1px #ffffff30}
+.folder-link:hover .fp1,.folder-link:focus-visible .fp1{transform:translateY(-3%) rotate(-4deg)}
+.folder-link:hover .fp2,.folder-link:focus-visible .fp2{transform:translateY(1%) rotate(2.5deg)}
+.folder-link:hover .fp3,.folder-link:focus-visible .fp3{transform:translateY(6%) rotate(-1.25deg)}
+.folder-link:hover .folder-front,.folder-link:focus-visible .folder-front{transform:rotateX(-30deg)}
+
+/* dock */
+.dock-wrap{position:sticky;bottom:0;z-index:20;height:0}
+.dock{position:absolute;bottom:max(24px,calc(env(safe-area-inset-bottom,0px) + 12px));left:50%;transform:translateX(-50%);color:#fff;font-size:14px;line-height:20px;animation:arrive .4s ease both}
+@keyframes arrive{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}
+.pill{position:relative;width:140px;height:52px;border-radius:28px;background:#000;box-shadow:0 0 0 1px #ffffff14,0 10px 32px -8px #00000066;overflow:hidden;transition:width .42s cubic-bezier(.3,1.25,.4,1),height .42s cubic-bezier(.3,1.25,.4,1),border-radius .42s,box-shadow .3s}
+.pill[data-open]{box-shadow:0 0 0 1px #ffffff1f,0 18px 48px -12px #00000080}
+.row3{position:absolute;bottom:0;left:50%;margin-left:-70px;display:flex;width:140px;height:52px;padding:4px;transition:opacity .2s,filter .2s}
+.pill[data-open] .row3{opacity:0;filter:blur(4px);pointer-events:none}
+.db{display:flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer;padding:12px;-webkit-tap-highlight-color:transparent;transition:background .14s}
+.db:hover{background:rgba(255,255,255,.1)}.db svg{width:20px;height:20px}
+.panel{position:absolute;bottom:0;left:50%;margin-left:-134px;width:268px;padding:8px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .2s}
+.panel.on{opacity:1;pointer-events:auto;transition-delay:.12s}
+.pi{display:flex;align-items:center;gap:12px;height:44px;width:100%;padding:0 14px;border:0;border-radius:20px;background:transparent;color:inherit;font:inherit;font-weight:500;text-align:left;cursor:pointer;white-space:nowrap}
+.pi:hover{background:rgba(255,255,255,.1)}
+.pi .k{width:20px;text-align:center;color:#a1a1aa;font-variant-numeric:tabular-nums}
+.pi svg{width:20px;height:20px;color:#a1a1aa}
+
+/* footer reveal */
+footer{height:50svh}
+.foot-scene{position:fixed;left:0;right:0;bottom:-25svh;height:100svh;z-index:0;background:var(--scene);pointer-events:none}
+.foot-scene .hero{--hero-height:100svh;position:absolute;inset:0;height:100%;min-height:0}
+.foot-scene .orb{pointer-events:none}
+
+/* lightbox */
+.lb{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(243,243,241,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:24px max(16px,env(safe-area-inset-left,0px));cursor:zoom-out;opacity:0;transition:opacity .25s}
+.lb.on{opacity:1}
+.lb .card{width:min(1100px,92vw);transition:transform .35s cubic-bezier(.2,.8,.2,1);transform:scale(.96)}
+.lb.on .card{transform:none}
+.lb .card>button{cursor:zoom-out;box-shadow:0 30px 80px -20px rgba(0,0,0,.35)}
+
+@media (max-width:640px){
+  .hero{--hero-height:62svh}
+  .col{width:min(var(--content),calc(100% - 32px));gap:80px}
+  .content{padding-top:48px}
+  h2 .n{position:static;display:inline-block;margin-right:8px;width:auto}
+  .works{gap:64px}
+  .gallery{margin-left:-16px;scroll-padding-inline-start:16px}
+  .track{padding-left:16px}.track>.end{width:calc(31vw - 16px)}
+  .card{width:calc(100vw - 32px)}
+  dl.tl>div{grid-template-columns:85px minmax(0,1fr);gap:18px}
+  .folders{column-gap:14px;row-gap:24px}
+  .folder-front span{font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+
+<a href="#about" class="skip">Skip to content</a>
+<main>
+<div class="sheet" id="sheet">
+  <header class="hero" id="top">
+    <div class="ring" data-ring></div>
+    <div class="hero-copy">
+      <h1 class="sig" aria-label="Saim"><span aria-hidden="true">Saim</span></h1>
+      <p>AI builder in Lucknow.<br>Turning ideas into webapps, games and brands people use.</p>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="col">
+      <section id="about" aria-labelledby="about-h">
+        <h2 id="about-h" class="tight"><span class="n" aria-hidden="true">1</span>About</h2>
+        <div class="stack">
+          <p>I coordinate clients at Encompass, a luxury travel company. Before that I managed processes at Indulge, a luxury lifestyle and concierge firm.</p>
+          <p>Outside work I build things with AI: focused webapps, browser games and brand concepts that go from an idea to a live link in a weekend.</p>
+        </div>
+      </section>
+
+      <section id="work" aria-labelledby="work-h">
+        <h2 id="work-h"><span class="n" aria-hidden="true">2</span>Selected work</h2>
+        <div class="works">
+
+          <article>
+            <a class="ph" href="https://trypeople.vercel.app" target="_blank" rel="noreferrer">
+              <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#171717"/><circle cx="16" cy="17" r="5" fill="#fff"/><circle cx="25" cy="17" r="5" fill="none" stroke="#fff" stroke-width="2"/><path d="M8 30c1.5-4.5 4.5-6.5 8-6.5s6.5 2 8 6.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+              <div><h3>People <svg class="arr" viewBox="0 0 6 16" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><path d="M.6 11.2 5.4 6.4M1.6 6.2h3.8V10"/></svg></h3><p>Contacts dashboard</p></div>
+            </a>
+            <p>A contacts dashboard that imports your address book from .vcf or Excel and syncs with Google Contacts. It greets you by name, groups people by how you know them, and runs entirely in the browser.</p>
+            <section class="gallery" aria-label="People screenshots"><div class="track"><div class="card"><button type="button" aria-label="Open People landing page"><img class="bgimg" src="img/l_stream.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot1.webp" alt="People landing page" style="aspect-ratio:1.599" draggable="false" loading="lazy" decoding="async"></button></div><div class="card"><button type="button" aria-label="Open People dashboard"><img class="bgimg" src="img/l_lake.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot2.webp" alt="People dashboard" style="aspect-ratio:1.599" draggable="false" loading="lazy" decoding="async"></button></div><span class="end" aria-hidden="true"></span>
+            </div></section>
+            <div class="gnav"><button type="button" data-dir="-1" aria-label="Previous screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3 4.5 7l4 4"/></svg></button><button type="button" data-dir="1" aria-label="Next screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3l4 4-4 4"/></svg></button></div>
+          </article>
+
+          <article>
+            <a class="ph">
+              <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#e8e7e2"/><rect x="9" y="9" width="22" height="22" rx="4" fill="#fff" stroke="#171717" stroke-width="1.6"/><path d="M13 15h3M19 15h8M13 20h3M19 20h8M13 25h3M19 25h5" stroke="#171717" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <div><h3>SOP Builder</h3><p>Plain language to SOPs</p></div>
+            </a>
+            <p>Describe a process the way you'd explain it to a new hire and get back a structured SOP with owners, steps and checks. My team already uses its share links to keep handovers consistent.</p>
+            <section class="gallery" aria-label="SOP Builder screenshots"><div class="track"><div class="card"><button type="button" aria-label="Open SOP Builder composer"><img class="bgimg" src="img/l_storm.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot3.webp" alt="SOP Builder composer" style="aspect-ratio:1.860" draggable="false" loading="lazy" decoding="async"></button></div><div class="card"><button type="button" aria-label="Open SOP Builder library"><img class="bgimg" src="img/l_leaves.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot4.webp" alt="SOP Builder library" style="aspect-ratio:1.860" draggable="false" loading="lazy" decoding="async"></button></div><span class="end" aria-hidden="true"></span>
+            </div></section>
+            <div class="gnav"><button type="button" data-dir="-1" aria-label="Previous screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3 4.5 7l4 4"/></svg></button><button type="button" data-dir="1" aria-label="Next screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3l4 4-4 4"/></svg></button></div>
+          </article>
+
+          <article>
+            <a class="ph" href="https://luxurytravellers.vercel.app" target="_blank" rel="noreferrer">
+              <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#f1ece2"/><circle cx="20" cy="17" r="6" fill="#d9a35b"/><path d="M7 26c3-2 6-2 9 0s6 2 9 0 6-2 8 0M9 31c3-2 6-2 9 0s6 2 9 0" fill="none" stroke="#3b6f86" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <div><h3>Luxury Escapes <svg class="arr" viewBox="0 0 6 16" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><path d="M.6 11.2 5.4 6.4M1.6 6.2h3.8V10"/></svg></h3><p>Trip requests on WhatsApp</p></div>
+            </a>
+            <p>A luxury travel webapp where guests browse destination cards, open an offer and send a trip request straight to WhatsApp. It started from a Bali getaway reference and is live on Vercel.</p>
+            <section class="gallery" aria-label="Luxury Escapes screenshots"><div class="track"><div class="card"><button type="button" aria-label="Open Luxury Escapes app screens"><img class="bgimg" src="img/l_lake.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot5.webp" alt="Luxury Escapes app screens" style="aspect-ratio:1.599" draggable="false" loading="lazy" decoding="async"></button></div><div class="card"><button type="button" aria-label="Open Luxury Escapes trip request"><img class="bgimg" src="img/l_dunes.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot6.webp" alt="Luxury Escapes trip request" style="aspect-ratio:1.600" draggable="false" loading="lazy" decoding="async"></button></div><span class="end" aria-hidden="true"></span>
+            </div></section>
+            <div class="gnav"><button type="button" data-dir="-1" aria-label="Previous screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3 4.5 7l4 4"/></svg></button><button type="button" data-dir="1" aria-label="Next screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3l4 4-4 4"/></svg></button></div>
+          </article>
+
+          <article>
+            <a class="ph">
+              <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#111214"/><path d="M9 13c4-1.5 8-1 11 1.5v14c-3-2.5-7-3-11-1.5zM31 13c-4-1.5-8-1-11 1.5v14c3-2.5 7-3 11-1.5z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              <div><h3>Padhai Buddy</h3><p>Notes to quiz</p></div>
+            </a>
+            <p>Paste your notes or upload a PDF and get a quiz back. Everything stays on your device, and it is tuned to work on any screen.</p>
+            <section class="gallery" aria-label="Padhai Buddy screenshots"><div class="track"><div class="card"><button type="button" aria-label="Open Padhai Buddy quiz"><img class="bgimg" src="img/l_stream.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot7.webp" alt="Padhai Buddy quiz" style="aspect-ratio:1.599" draggable="false" loading="lazy" decoding="async"></button></div><div class="card"><button type="button" aria-label="Open Padhai Buddy answer feedback"><img class="bgimg" src="img/l_storm.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot8.webp" alt="Padhai Buddy answer feedback" style="aspect-ratio:1.599" draggable="false" loading="lazy" decoding="async"></button></div><span class="end" aria-hidden="true"></span>
+            </div></section>
+            <div class="gnav"><button type="button" data-dir="-1" aria-label="Previous screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3 4.5 7l4 4"/></svg></button><button type="button" data-dir="1" aria-label="Next screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3l4 4-4 4"/></svg></button></div>
+          </article>
+
+          <article>
+            <a class="ph" href="https://inkduel.netlify.app" target="_blank" rel="noreferrer">
+              <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#f4efe6"/><g fill="none" stroke="#171717" stroke-width="1.8" stroke-linecap="round"><circle cx="20" cy="11" r="3.2"/><path d="M20 14.5v10M20 17l6-2M20 18l-5 4M20 24.5l-4 7M20 24.5l5 6.5"/></g></svg>
+              <div><h3>Ink Duel &amp; Matchbox Cascade <svg class="arr" viewBox="0 0 6 16" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><path d="M.6 11.2 5.4 6.4M1.6 6.2h3.8V10"/></svg></h3><p>Browser games</p></div>
+            </a>
+            <p>Ink Duel is a fighting game with 20 fighters, each with its own finisher, across versus, story, arcade and practice modes. Matchbox Cascade is a domino-chain game of toppling matchboxes and glass. Both run in the browser with nothing to install.</p>
+            <section class="gallery" aria-label="Game screenshots"><div class="track"><div class="card"><button type="button" aria-label="Open Ink Duel fight"><img class="bgimg" src="img/l_dunes.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot9.webp" alt="Ink Duel fight" style="aspect-ratio:1.600" draggable="false" loading="lazy" decoding="async"></button></div><div class="card"><button type="button" aria-label="Open Ink Duel fighter select"><img class="bgimg" src="img/l_storm.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot10.webp" alt="Ink Duel fighter select" style="aspect-ratio:1.600" draggable="false" loading="lazy" decoding="async"></button></div><div class="card"><button type="button" aria-label="Open Matchbox Cascade levels"><img class="bgimg" src="img/l_leaves.webp" alt="" loading="lazy" decoding="async"><img class="shotimg" src="img/shot11.webp" alt="Matchbox Cascade levels" style="aspect-ratio:1.599" draggable="false" loading="lazy" decoding="async"></button></div><span class="end" aria-hidden="true"></span>
+            </div></section>
+            <div class="gnav"><button type="button" data-dir="-1" aria-label="Previous screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 3 4.5 7l4 4"/></svg></button><button type="button" data-dir="1" aria-label="Next screenshot"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3l4 4-4 4"/></svg></button></div>
+          </article>
+
+        </div>
+      </section>
+
+      <section id="experience" aria-labelledby="exp-h">
+        <h2 id="exp-h"><span class="n" aria-hidden="true">3</span>Experience</h2>
+        <dl class="tl">
+          <div><dt>Now</dt><dd><a href="https://goencompass.in" target="_blank" rel="noreferrer">Executive &amp; Client Coordinator at Encompass <svg class="arr" style="color:var(--muted)" viewBox="0 0 6 16" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><path d="M.6 11.2 5.4 6.4M1.6 6.2h3.8V10"/></svg></a><span>Luxury travel</span></dd></div>
+                    <div><dt>Earlier</dt><dd>Process Manager at Indulge<span>Luxury lifestyle &amp; concierge</span></dd></div>
+        </dl>
+      </section>
+
+      <section id="elsewhere" aria-labelledby="else-h">
+        <h2 id="else-h"><span class="n" aria-hidden="true">4</span>Elsewhere</h2>
+        <p class="lead">A few other places I keep things on the internet.</p>
+        <div class="folders"><a class="folder-link" href="https://in.linkedin.com/in/saimnusarat" target="_blank" rel="noreferrer" aria-label="Saim Nusarat on LinkedIn"><span class="folder-shell" aria-hidden="true" style="--folder-color:#9db4d4;--folder-edge:#8199bb"><svg class="folder-back" viewBox="0 0 200 120" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M17 4H79C83 4 86 5 89 8L102 20H185C193 20 197 25 197 32V106C197 113 192 117 185 117H15C8 117 3 112 3 105V18C3 10 9 4 17 4Z"/></svg><span class="folder-paper fp1"><span class="paper-line pl-s"></span><span class="paper-line"></span><span class="paper-line"></span></span><span class="folder-paper fp2"><span class="paper-dot"></span><span class="paper-line pl-s"></span><span class="paper-line"></span></span><span class="folder-paper fp3"><span class="paper-line pl-s"></span><span class="paper-line"></span><span class="paper-line pl-m"></span></span><span class="folder-front"><span>LinkedIn</span></span></span></a><a class="folder-link" href="https://github.com/saimvibecoder" target="_blank" rel="noreferrer" aria-label="Code on GitHub"><span class="folder-shell" aria-hidden="true" style="--folder-color:#b3b6c2;--folder-edge:#9a9dab"><svg class="folder-back" viewBox="0 0 200 120" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M17 4H79C83 4 86 5 89 8L102 20H185C193 20 197 25 197 32V106C197 113 192 117 185 117H15C8 117 3 112 3 105V18C3 10 9 4 17 4Z"/></svg><span class="folder-paper fp1"><span class="paper-line pl-s"></span><span class="paper-line"></span><span class="paper-line"></span></span><span class="folder-paper fp2"><span class="paper-dot"></span><span class="paper-line pl-s"></span><span class="paper-line"></span></span><span class="folder-paper fp3"><span class="paper-line pl-s"></span><span class="paper-line"></span><span class="paper-line pl-m"></span></span><span class="folder-front"><span>GitHub</span></span></span></a><a class="folder-link" href="https://trypeople.vercel.app" target="_blank" rel="noreferrer" aria-label="People, contacts dashboard"><span class="folder-shell" aria-hidden="true" style="--folder-color:#b9b2dc;--folder-edge:#9f97c8"><svg class="folder-back" viewBox="0 0 200 120" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M17 4H79C83 4 86 5 89 8L102 20H185C193 20 197 25 197 32V106C197 113 192 117 185 117H15C8 117 3 112 3 105V18C3 10 9 4 17 4Z"/></svg><span class="folder-paper fp1"><span class="paper-line pl-s"></span><span class="paper-line"></span><span class="paper-line"></span></span><span class="folder-paper fp2"><span class="paper-dot"></span><span class="paper-line pl-s"></span><span class="paper-line"></span></span><span class="folder-paper fp3"><span class="paper-line pl-s"></span><span class="paper-line"></span><span class="paper-line pl-m"></span></span><span class="folder-front"><span>People</span></span></span></a><a class="folder-link" href="https://inkduel.netlify.app" target="_blank" rel="noreferrer" aria-label="Ink Duel, browser game"><span class="folder-shell" aria-hidden="true" style="--folder-color:#ddb29c;--folder-edge:#c69a84"><svg class="folder-back" viewBox="0 0 200 120" preserveAspectRatio="none" focusable="false" aria-hidden="true"><path d="M17 4H79C83 4 86 5 89 8L102 20H185C193 20 197 25 197 32V106C197 113 192 117 185 117H15C8 117 3 112 3 105V18C3 10 9 4 17 4Z"/></svg><span class="folder-paper fp1"><span class="paper-line pl-s"></span><span class="paper-line"></span><span class="paper-line"></span></span><span class="folder-paper fp2"><span class="paper-dot"></span><span class="paper-line pl-s"></span><span class="paper-line"></span></span><span class="folder-paper fp3"><span class="paper-line pl-s"></span><span class="paper-line"></span><span class="paper-line pl-m"></span></span><span class="folder-front"><span>Ink Duel</span></span></span></a></div>
+      </section>
+
+      <section id="more" aria-labelledby="ven-h">
+        <h2 id="ven-h"><span class="n" aria-hidden="true">5</span>More projects</h2>
+        <dl class="tl">
+          <div><dt>Webapp</dt><dd>Bhu<span>UP land records, placed on a map</span></dd></div>
+          <div><dt>Brand</dt><dd>Zerawti<span>Luxury ittar house concept · Kannauj heritage</span></dd></div>
+          <div><dt>Webapp</dt><dd>WhatsApp site builder<span>Quick websites for small businesses, ordered on WhatsApp</span></dd></div>
+        </dl>
+      </section>
+    </div>
+  </div>
+
+  <div class="dock-wrap">
+    <nav class="dock" aria-label="Site navigation">
+      <div class="pill" id="pill">
+        <div class="row3">
+          <button class="db" type="button" data-act="home" aria-label="Home"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3.5 8.5 10 3.5l6.5 5V16a1 1 0 0 1-1 1h-3v-4.5h-5V17h-3a1 1 0 0 1-1-1z"/></svg></button>
+          <button class="db" type="button" data-act="sections" aria-label="Sections" aria-expanded="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h12M4 10h12M4 14h12"/></svg></button>
+          <button class="db" type="button" data-act="contact" aria-label="Links" aria-expanded="false"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="3.2"/><path d="M13.2 10v1.3a2.2 2.2 0 0 0 4.3.6A7.5 7.5 0 1 0 14 16.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="panel" id="p-sections" inert>
+          <a class="pi" href="#about"><span class="k">1</span>About</a>
+          <a class="pi" href="#work"><span class="k">2</span>Work</a>
+          <a class="pi" href="#experience"><span class="k">3</span>Experience</a>
+          <a class="pi" href="#elsewhere"><span class="k">4</span>Elsewhere</a>
+          <a class="pi" href="#more"><span class="k">5</span>More projects</a>
+          <button class="pi" type="button" data-act="back"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 5.5 7 10l4.5 4.5"/></svg>Back</button>
+        </div>
+        <div class="panel" id="p-contact" inert>
+          <a class="pi" href="https://in.linkedin.com/in/saimnusarat" target="_blank" rel="noreferrer"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M4.5 3a1.7 1.7 0 1 1 0 3.4 1.7 1.7 0 0 1 0-3.4zM3 7.8h3V17H3zM8 7.8h2.9v1.3c.4-.8 1.4-1.5 2.9-1.5 3 0 3.6 2 3.6 4.5V17h-3v-4.3c0-1 0-2.4-1.5-2.4s-1.8 1.1-1.8 2.3V17H8z"/></svg>LinkedIn</a>
+          <a class="pi" href="https://github.com/saimvibecoder" target="_blank" rel="noreferrer"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.4c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.4.7 0-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.5 7.5 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.8-3.6 4 .3.3.6.8.6 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 10 2z"/></svg>GitHub</a>
+          <a class="pi" href="https://trypeople.vercel.app" target="_blank" rel="noreferrer"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="7.5" r="3"/><path d="M2.5 16c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5M13 4.8a3 3 0 0 1 0 5.4M15.5 12.2c1 .8 1.7 2.1 2 3.8" stroke-linecap="round"/></svg>People</a>
+          <a class="pi" href="https://inkduel.netlify.app" target="_blank" rel="noreferrer"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="4.5" r="2"/><path d="M10 6.5v6M10 8.5l4-1.5M10 9l-3.5 2.5M10 12.5l-3 5M10 12.5l3.5 4.5"/></svg>Ink Duel</a>
+          <a class="pi" href="https://luxurytravellers.vercel.app" target="_blank" rel="noreferrer"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="8" r="3"/><path d="M3 14c2-1.3 3.5-1.3 5 0s3 1.3 5 0 3-1.3 4 0"/></svg>Luxury Escapes</a>
+          <button class="pi" type="button" data-act="back"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 5.5 7 10l4.5 4.5"/></svg>Back</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<footer aria-hidden="true"><div class="foot-scene"><div class="hero"><div class="ring" data-ring data-foot></div></div></div></footer>
+</main>
+
+<script>
+(function(){
+  var ORBS=["img/orb0.webp", "img/orb1.webp", "img/orb2.webp", "img/orb3.webp", "img/orb4.webp", "img/orb5.webp", "img/orb6.webp", "img/orb7.webp"];
+  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var rings=[].map.call(document.querySelectorAll("[data-ring]"),function(el){
+    var orbs=ORBS.map(function(src,i){var o=document.createElement("div");o.className="orb";o.innerHTML='<i style="background-image:url('+src+')"></i>';el.appendChild(o);return o});
+    return {el:el,orbs:orbs,off:el.hasAttribute("data-foot")?Math.PI/8:-Math.PI*5/8+Math.PI/8,vel:0,drag:null,foot:el.hasAttribute("data-foot")};
+  });
+  function layout(r,t){
+    var R=r.el.getBoundingClientRect(),rad=Math.min(320,innerWidth*.37,R.height*.38);
+    if(r.foot){if(document.documentElement.scrollHeight-innerHeight-scrollY>innerHeight)return}else if(R.bottom<0||R.top>innerHeight)return;
+    r.orbs.forEach(function(o,i){
+      var a=r.off+i*Math.PI/4,bob=reduce?0:Math.sin(t/1400+i*1.3)*3;
+      var x=Math.cos(a)*rad,y=Math.sin(a)*rad+bob;
+      var d=r.drag===i?1.08:1;
+      o.style.transform="translate("+x.toFixed(1)+"px,"+y.toFixed(1)+"px) scale("+d+")";
+      o.firstChild.style.backgroundPosition=(50+Math.cos(a)*14).toFixed(1)+"% "+(50+Math.sin(a)*14).toFixed(1)+"%";
+    });
+  }
+  rings.forEach(function(r){
+    if(r.foot)return;
+    r.orbs.forEach(function(o,i){
+      var last=null;
+      o.addEventListener("pointerdown",function(e){r.drag=i;o.setPointerCapture(e.pointerId);o.style.cursor="grabbing";last=angle(e)});
+      o.addEventListener("pointermove",function(e){if(r.drag!==i)return;var a=angle(e),d=a-last;if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;r.off+=d;r.vel=d;last=a});
+      o.addEventListener("pointerup",function(){r.drag=null;o.style.cursor=""});
+      o.addEventListener("pointercancel",function(){r.drag=null;o.style.cursor=""});
+    });
+    function angle(e){var b=r.el.getBoundingClientRect();return Math.atan2(e.clientY-(b.top+b.height/2),e.clientX-(b.left+b.width/2))}
+  });
+  function tick(t){
+    rings.forEach(function(r){
+      if(r.drag===null){r.vel*=.94;r.off+=r.vel+(reduce?0:.00045)}
+      layout(r,t);
+    });
+    rings.forEach(function(r){var f=r.foot;r.foot=false;layout(r,0);r.foot=f});
+  requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* sheet lifts off the footer scene as you reach the end */
+  var sheet=document.getElementById("sheet");
+  function onScroll(){
+    var rest=document.documentElement.scrollHeight-innerHeight-scrollY,f=innerHeight*.5,p=Math.max(0,Math.min(1,1-rest/f));
+    var rad=(p*16).toFixed(1)+"px";
+    sheet.style.borderBottomLeftRadius=rad;sheet.style.borderBottomRightRadius=rad;
+    sheet.style.transform=p>0?"scale("+(1-p*.03).toFixed(4)+")":"none";
+  }
+  addEventListener("scroll",onScroll,{passive:true});addEventListener("resize",onScroll);onScroll();
+
+  /* gallery: arrows, mouse drag, edge fades */
+  document.querySelectorAll(".gallery").forEach(function(g){
+    var nav=g.parentNode.querySelector(".gnav"),prev=nav&&nav.children[0],next=nav&&nav.children[1];
+    function f(){var m=g.scrollWidth-g.clientWidth;g.style.setProperty("--fs",Math.min(40,g.scrollLeft)+"px");g.style.setProperty("--fe",Math.min(40,m-g.scrollLeft)+"px");
+      if(prev){prev.disabled=g.scrollLeft<4;next.disabled=g.scrollLeft>m-4}}
+    g.addEventListener("scroll",f,{passive:true});addEventListener("resize",f);f();
+    function step(d){var c=g.querySelector(".card");g.scrollBy({left:d*(c.offsetWidth+14),behavior:reduce?"auto":"smooth"})}
+    if(nav)nav.addEventListener("click",function(e){var b=e.target.closest("button[data-dir]");if(b)step(+b.dataset.dir)});
+    g.tabIndex=-1;g.addEventListener("keydown",function(e){if(e.key==="ArrowRight"){e.preventDefault();step(1)}if(e.key==="ArrowLeft"){e.preventDefault();step(-1)}});
+    var down=null,moved=false;g.classList.add("grab");
+    g.addEventListener("pointerdown",function(e){if(e.pointerType!=="mouse"||e.button!==0)return;down={x:e.clientX,s:g.scrollLeft};moved=false});
+    addEventListener("pointermove",function(e){if(!down)return;var dx=e.clientX-down.x;if(Math.abs(dx)>5){moved=true;g.classList.add("dragging")}if(moved){g.scrollLeft=down.s-dx;e.preventDefault()}});
+    addEventListener("pointerup",function(){if(!down)return;down=null;if(moved){g.classList.remove("dragging");var c=g.querySelector(".card"),w=c.offsetWidth+14;g.scrollTo({left:Math.round(g.scrollLeft/w)*w,behavior:"smooth"})}});
+    g.addEventListener("click",function(e){if(moved){e.stopPropagation();e.preventDefault();moved=false}},true);
+    g.addEventListener("dragstart",function(e){e.preventDefault()});
+  });
+
+  /* lightbox */
+  document.querySelectorAll(".card>button").forEach(function(b){
+    b.addEventListener("click",function(){
+      var lb=document.createElement("div");lb.className="lb";lb.setAttribute("role","dialog");lb.setAttribute("aria-label",b.getAttribute("aria-label").replace("Open ",""));
+      var c=b.parentNode.cloneNode(true);lb.appendChild(c);document.body.appendChild(lb);
+      requestAnimationFrame(function(){lb.classList.add("on")});
+      var btn=c.querySelector("button");btn.focus();
+      function close(){lb.classList.remove("on");setTimeout(function(){lb.remove()},250);removeEventListener("keydown",k);b.focus()}
+      function k(e){if(e.key==="Escape")close()}
+      lb.addEventListener("click",close);addEventListener("keydown",k);
+    });
+  });
+
+  /* dock */
+  var pill=document.getElementById("pill"),sizes={sections:[268,6*44+16],contact:[268,6*44+16]};
+  function open(name){
+    pill.querySelectorAll(".panel").forEach(function(p){var on=p.id==="p-"+name;p.classList.toggle("on",on);if(on)p.removeAttribute("inert");else p.setAttribute("inert","")});
+    pill.querySelectorAll("[aria-expanded]").forEach(function(b){b.setAttribute("aria-expanded",b.dataset.act===name)});
+    if(name){var s=sizes[name];pill.style.width=s[0]+"px";pill.style.height=s[1]+"px";pill.style.borderRadius="28px";pill.setAttribute("data-open","")}
+    else{pill.style.width="";pill.style.height="";pill.removeAttribute("data-open")}
+  }
+  pill.addEventListener("click",function(e){
+    var t=e.target.closest("[data-act],a.pi");if(!t)return;
+    if(t.matches("a.pi")){open(null);return}
+    var a=t.dataset.act;
+    if(a==="home"){scrollTo({top:0,behavior:reduce?"auto":"smooth"})}
+    else if(a==="back"){open(null)}
+    else open(a);
+  });
+  document.addEventListener("click",function(e){if(!pill.contains(e.target))open(null)});
+  addEventListener("keydown",function(e){if(e.key==="Escape")open(null)});
+})();
+</script>
