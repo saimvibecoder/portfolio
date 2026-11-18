@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SOP Builder · Demo</title>
+<meta name="description" content="Describe a process in plain words and get a structured SOP: steps with owners and timings, a checklist, KPIs and an escalation rule. Demo with ready-made examples.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Pixelify+Sans:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* Layout: Fastshot-style dark stage. A full-screen WebGL shader behind everything; one hash view at a time (Home composer, Library, SOP, How it works), each with its own shader. Single dark look by choice. Demo build: ready-made SOPs, no sign-in. */
+:root{
+  color-scheme:dark;
+  --ink:#ffffff; --ink-2:#d0d8e0; --ink-3:#9fb0bf;
+  --ice:#b5e5ff; --ice-deep:#123142; --peach:#f8b285;
+  --glass-edge:#e3f4ff38; --glass-hi:#ffffff80;
+  --font-text:"Inter",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-pixel:"Pixelify Sans","Inter",monospace;
+  --e-primary:cubic-bezier(.16,1,.3,1); --e-soft:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{background:#000;min-height:100%}
+body{margin:0;color:var(--ink);font-family:var(--font-text);-webkit-font-smoothing:antialiased;font-synthesis:none}
+[hidden]{display:none!important}
+button,input,textarea{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+svg{display:block;flex-shrink:0}
+:focus-visible{outline:2px solid #abe2ff;outline-offset:3px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.stage{position:fixed;inset:0;z-index:0;background:#000}
+.stage canvas{display:block;width:100%;height:100%}
+.stage::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 30%,#0006 100%);pointer-events:none}
+
+.frame{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;
+  padding-left:max(clamp(18px,5vw,64px),env(safe-area-inset-left,0px));padding-right:max(clamp(18px,5vw,64px),env(safe-area-inset-right,0px));
+  padding-block:clamp(16px,3vh,32px) clamp(24px,5vh,56px)}
+@supports(min-height:100dvh){.frame{min-height:100dvh}}
+
+/* nav */
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;height:44px;position:relative;z-index:5}
+.brand{display:inline-flex;align-items:center;gap:11px;font-size:18px;font-weight:500;letter-spacing:-.015em;text-shadow:0 1px 10px #0005}
+.mark{width:32px;height:32px;color:#f4f6f8}
+.links{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:44px;font-size:17px;letter-spacing:-.01em;text-shadow:0 1px 12px #0005}
+.links a{transition:opacity .18s}.links a:hover{opacity:.72}
+.links a[aria-current="page"],.drop a[aria-current="page"]{color:var(--ice)}
+.cta{display:grid;place-items:center;height:42px;padding:0 20px;border-radius:12px;font-size:15px;font-weight:500;letter-spacing:-.01em;
+  background:linear-gradient(180deg,#3d3d3f,#1d1d20);box-shadow:inset 0 1px 0 #ffffff1a,0 2px 14px #0005;transition:filter .18s}
+.cta:hover{filter:brightness(1.16)}
+.burger{display:none;width:40px;height:40px;border-radius:11px;background:#ffffff1a;border:1px solid #ffffff24;place-items:center}
+.burger svg{width:17px;height:12px}
+.drop{display:none}
+@media (max-width:720px){
+  .links,.nav>.cta{display:none}
+  .burger{display:grid}
+  .drop{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(.4,0,.2,1);position:absolute;top:calc(clamp(16px,3vh,32px) + 52px);
+    left:max(18px,env(safe-area-inset-left,0px));right:max(18px,env(safe-area-inset-right,0px));z-index:6;pointer-events:none}
+  .drop.open{grid-template-rows:1fr;pointer-events:auto}
+  .drop>div{overflow:hidden;visibility:hidden;transition:visibility .32s}
+  .drop.open>div{visibility:visible}
+  .drop-panel{padding:12px;background:rgba(24,24,27,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:16px;border:1px solid #ffffff17;display:grid;gap:2px}
+  .drop-panel a{font-size:16px;padding:12px}
+  .drop-panel .cta{margin-top:6px}
+}
+
+/* views */
+main[hidden]{display:none!important}
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(28px,6vh,56px);padding-block:clamp(32px,6vh,64px)}
+.h1{margin:0;font-family:var(--font-pixel);font-weight:400;font-size:clamp(40px,7.4vw,104px);line-height:1.04;letter-spacing:-.035em;text-align:center;text-shadow:0 2px 22px #0006}
+.h1 span{display:block}
+@media (min-width:560px){.h1 span{white-space:nowrap}}
+
+/* liquid glass */
+.glass{position:relative;isolation:isolate;
+  background:linear-gradient(135deg,rgba(230,245,255,.16),rgba(27,37,51,.26) 45%,rgba(169,204,230,.08));
+  -webkit-backdrop-filter:blur(22px) saturate(145%);backdrop-filter:blur(22px) saturate(145%);
+  box-shadow:inset 0 0 0 1px var(--glass-edge),inset 0 1px 1px var(--glass-hi),inset 0 -1px 1px #b1d7ff25,0 22px 60px #0004}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 8% 0%,#ffffff24,transparent 50%),radial-gradient(ellipse at 100% 100%,#c4e7ff16,transparent 45%)}
+.glass::after{content:"";position:absolute;pointer-events:none;left:8%;right:8%;top:0;height:1px;background:linear-gradient(90deg,transparent,#ffffffa6 25%,#ffffff30 80%,transparent)}
+@supports not (backdrop-filter:blur(1px)){.glass{background:rgba(29,39,49,.9)}}
+
+.composer{width:min(100%,740px);border-radius:26px;padding:22px 22px 16px;display:flex;flex-direction:column;gap:18px}
+.composer textarea{width:100%;min-height:96px;max-height:40vh;resize:none;font-size:16px;line-height:1.5;color:#e6edf3;text-shadow:0 1px 6px #0008;outline:none}
+.composer textarea::placeholder{color:#b9c6d1}
+.tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border-radius:9px;font-size:13px;font-weight:500;color:#c2ced8;white-space:nowrap;
+  background:linear-gradient(180deg,#ffffff17,#ffffff08);border:1px solid #ffffff24;box-shadow:inset 0 1px 0 #ffffff12;transition:background .18s,color .18s}
+.chip:hover{background:linear-gradient(180deg,#ffffff24,#ffffff12);color:#fff}
+.chip svg{width:14px;height:14px}
+.right{display:flex;align-items:center;gap:12px;margin-left:auto}
+.count{font-size:12px;color:#c2ced8;font-variant-numeric:tabular-nums;white-space:nowrap}
+.send{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:var(--ice-deep);
+  background:linear-gradient(155deg,#e2faff,#a2dcf6 55%,#79c1e8);box-shadow:inset 0 1px 1px #ffffffc4,0 3px 16px #78c5ed36;transition:filter .18s,scale .18s}
+.send:hover{filter:brightness(1.07)}.send:active{scale:.94}
+.send svg{width:14px;height:17px;fill:currentColor}
+.send[aria-busy="true"] svg{display:none}
+.spin{display:none;width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:sp .8s linear infinite}
+.send[aria-busy="true"] .spin{display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.under{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;min-height:48px}
+.status{margin:0;font-size:14px;color:var(--ink-2);text-shadow:0 1px 10px #000;max-width:60ch}
+.status.err{color:var(--peach)}
+.ghost-link{font-size:14px;color:#fffffff2;text-shadow:0 1px 12px #0006;border-bottom:1px solid #ffffff40;padding-bottom:2px}
+.ghost-link:hover{border-color:var(--ice);color:var(--ice)}
+.demo-note{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;font-size:13px;color:#dbf3ff;text-shadow:0 1px 10px #000}
+
+/* inner pages */
+.page{flex:1;margin-top:clamp(36px,7vh,76px)}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:0 0 30px}
+.page-head h1{margin:0;max-width:20ch;font-family:var(--font-pixel);font-weight:400;font-size:clamp(34px,4vw,58px);line-height:1.06;letter-spacing:-.035em;text-shadow:0 2px 22px #0009;text-wrap:balance}
+.page-head p{margin:0;max-width:300px;color:var(--ink-2);font-size:14px;line-height:1.6;text-shadow:0 1px 12px #000}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#dbf3ff;margin-bottom:14px}
+.pill{border:1px solid #c4eaff38;background:#a5dcff16;border-radius:20px;padding:5px 10px;font-size:11px;color:#dbf3ff;white-space:nowrap}
+.pill.crit{border-color:#f8b28555;background:#f8b2851c;color:#ffd9bf}
+.pill.live{border-color:#9ff0c455;background:#9ff0c41a;color:#c9f7dd}
+@media (max-width:900px){.page-head{flex-direction:column;align-items:flex-start;gap:12px}.page-head p{max-width:46ch}}
+
+.card{border-radius:22px;padding:22px;min-width:0}
+.card h2{margin:0 0 6px;font-size:19px;line-height:1.25;font-weight:500;letter-spacing:-.025em;text-shadow:0 1px 10px #0008}
+.card p{margin:0;color:var(--ink-2);font-size:14px;line-height:1.6;text-shadow:0 1px 8px #0009}
+.label{font-size:12px;color:var(--ink-3);letter-spacing:.02em;margin:0 0 12px;display:flex;justify-content:space-between;gap:12px}
+
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.stat b{display:block;font-family:var(--font-pixel);font-weight:400;font-size:clamp(34px,3.6vw,52px);line-height:1;letter-spacing:-.04em;color:#e8f8ff;overflow-wrap:anywhere}
+.stat span{display:block;margin-top:10px;font-size:13px;color:var(--ink-3)}
+.stat.crit b{color:#ffd0b0}
+@media (max-width:900px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:28px}
+@media (max-width:900px){.facts{grid-template-columns:minmax(0,1fr)}}
+
+.section-title{font-family:var(--font-pixel);font-weight:400;font-size:28px;letter-spacing:-.03em;margin:0 0 16px;text-shadow:0 2px 18px #0008}
+.steps{list-style:none;margin:0 0 32px;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:1050px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.steps{grid-template-columns:minmax(0,1fr)}}
+.step{display:flex;flex-direction:column;gap:10px;height:100%}
+.step-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.num{font-family:var(--font-pixel);font-size:40px;line-height:1;letter-spacing:-.04em;color:#e8f8ff}
+.step.is-crit .num{color:#ffd0b0}
+.step-meta{margin-top:auto;padding-top:12px;border-top:1px solid #ffffff1c;display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:#dfebf4}
+.step-meta span{background:#e2eeff14;border:1px solid #ffffff12;border-radius:8px;padding:4px 8px}
+
+.lower{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.lower{grid-template-columns:minmax(0,1fr)}}
+.stack{display:grid;gap:16px;align-content:start}
+.bar{height:4px;border-radius:4px;background:#ffffff1c;overflow:hidden;margin-bottom:8px}
+.bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,#a2dcf6,#e2faff);transition:width .35s var(--e-soft)}
+.checks{list-style:none;margin:0;padding:0;display:grid}
+.checks label{display:flex;align-items:flex-start;gap:12px;padding:11px 4px;border-bottom:1px solid #ffffff14;cursor:pointer;font-size:14px;line-height:1.45;color:#dfebf4}
+.checks li:last-child label{border-bottom:0}
+.checks input{appearance:none;-webkit-appearance:none;flex:none;width:20px;height:20px;margin:0;border-radius:6px;border:1.5px solid #ffffff55;background:#ffffff0a;display:grid;place-items:center;transition:background .15s,border-color .15s}
+.checks input:checked{background:linear-gradient(155deg,#e2faff,#79c1e8);border-color:#d5f3ff}
+.checks input:checked::after{content:"";width:5px;height:10px;border:solid var(--ice-deep);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.checks input:checked+span{color:var(--ink-3);text-decoration:line-through}
+.kpis{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.kpis li{display:flex;gap:10px;font-size:14px;line-height:1.5;color:#dfebf4}
+.kpis li::before{content:"✓";color:var(--ice)}
+.esc-card{box-shadow:inset 0 0 0 1px #f8b28545,inset 0 1px 1px #ffffff70,0 18px 44px #0004}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:46px;padding:0 18px;border-radius:12px;font-size:14px;font-weight:500;white-space:nowrap;
+  background:linear-gradient(160deg,#ffffff25,#ffffff0c);border:1px solid #ffffff30;box-shadow:inset 0 1px 0 #ffffff25;transition:background .2s,transform .2s}
+.btn:hover{background:#ffffff30;transform:translateY(-2px)}
+.btn.primary{background:linear-gradient(155deg,#e2faff,#a2dcf6 55%,#79c1e8);color:var(--ice-deep);border-color:#d5f3ff;box-shadow:inset 0 1px 1px #ffffffb3,0 5px 22px #78c5ed22}
+.btn svg{width:16px;height:16px}
+.match{margin:0 0 22px;border-radius:16px;padding:14px 16px;font-size:14px;line-height:1.55;color:#dbf3ff}
+
+/* library */
+.lib-sec{display:grid;gap:18px;margin-bottom:40px}
+.lib-head{display:grid;gap:6px}
+.lib-sub{margin:0;font-size:14px;color:var(--ink-2);max-width:60ch;text-shadow:0 1px 10px #000}
+.lib{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:1050px){.lib{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.lib{grid-template-columns:minmax(0,1fr)}}
+.lib-card{display:flex;flex-direction:column;gap:12px;height:100%}
+.lib-card h2{font-size:18px}
+.lib-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:#dfebf4}
+.lib-meta span{background:#e2eeff14;border:1px solid #ffffff12;border-radius:8px;padding:4px 8px}
+.lib-actions{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px solid #ffffff1c}
+.lib-actions .btn{min-height:40px;padding:0 14px;font-size:13px}
+.search{width:min(100%,320px);min-height:44px;border-radius:12px;padding:0 14px;background:#0b10186b;border:1px solid #ffffff22;color:#e6edf3;font-size:14px}
+.search::placeholder{color:#9fb0bf}
+
+.how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media (max-width:820px){.how{grid-template-columns:minmax(0,1fr)}}
+.how .card{padding:28px;display:flex;flex-direction:column;gap:12px}
+.how .num{font-size:64px}
+.demo{height:86px;display:flex;align-items:center;justify-content:center;gap:9px;padding:12px;border-radius:12px;background:linear-gradient(135deg,#0b101833,#0b10186b);border:1px solid #ffffff16;margin-bottom:8px;overflow:hidden}
+.mini{font-size:11px;color:#d7dfe6;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px;border-radius:8px;background:#e2eeff14;border:1px solid #ffffff12}
+.mini b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(155deg,#e2faff,#79c1e8);color:var(--ice-deep);font-weight:600}
+.mini-steps{display:grid;gap:5px;width:100%}
+.mini-steps i{display:block;height:8px;border-radius:4px;background:#ffffff26}
+.mini-steps i:nth-child(1){width:80%}.mini-steps i:nth-child(2){width:62%;background:#f8b28566}.mini-steps i:nth-child(3){width:72%}
+.mini-check{display:flex;gap:8px}
+.mini-check span{width:22px;height:22px;border-radius:6px;border:1.5px solid #ffffff55}
+.mini-check span.on{background:linear-gradient(155deg,#e2faff,#79c1e8);border-color:#d5f3ff}
+
+@media (max-width:720px){
+  .chip{height:40px;padding:0 13px;font-size:14px}
+  .search{font-size:16px;min-height:44px}
+  .eyebrow{font-size:13px}
+  .eyebrow>span:not(.pill){text-shadow:0 1px 8px #000,0 0 2px #000}
+  .pill{font-size:12px;background:#0b1018b3}
+  .ghost-link{display:inline-block;padding:10px 4px}
+  .lib-actions .btn{min-height:44px}
+  .demo .mini{font-size:12px}
+}
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;z-index:20;max-width:calc(100% - 32px);
+  padding:12px 16px;border-radius:14px;font-size:14px;background:rgba(24,24,27,.94);border:1px solid #ffffff1f;box-shadow:0 10px 30px #0006;transition:opacity .25s,transform .25s var(--e-soft);pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{color:#ffd0b0}
+
+/* entrances */
+@keyframes rise{from{opacity:0;transform:translateY(14px);filter:blur(6px)}}
+@keyframes drop{from{opacity:0;transform:translateY(-30px) scale(.97);filter:blur(5px)}}
+@media (prefers-reduced-motion:no-preference){
+  .arrive .h1{animation:rise 1s var(--e-primary) .1s both}
+  .arrive .composer{animation:rise .9s var(--e-primary) .35s both}
+  .arrive .under{animation:rise .6s var(--e-soft) .6s both}
+  .arrive .w{animation:drop .82s var(--e-primary) calc(var(--o,0)*.08s) backwards}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div class="stage" aria-hidden="true"><canvas id="gl"></canvas></div>
+
+<div class="frame">
+  <header class="nav">
+    <a class="brand" href="#home" aria-label="SOP Builder home">
+      <svg class="mark" viewBox="0 0 34 34" aria-hidden="true"><path d="M8 5h20v6H14v4h14v14H6v-6h14v-4H8Z" fill="currentColor"/></svg>
+      <span>SOP Builder</span>
+    </a>
+    <nav class="links" aria-label="Main navigation"><a href="#library">Library</a><a href="#how">How it works</a><a href="/">Portfolio ↗</a></nav>
+    <a class="cta" href="#home">Build an SOP</a>
+    <button class="burger" id="burger" type="button" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 17 12"><path d="M1 2h15M1 10h15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+  </header>
+  <nav class="drop" id="drop" aria-label="Mobile navigation"><div><div class="drop-panel"><a href="#library">Library</a><a href="#how">How it works</a><a href="/">Portfolio ↗</a><a class="cta" href="#home">Build an SOP</a></div></div></nav>
+
+  <!-- HOME -->
+  <main class="hero" id="v-home">
+    <h1 class="h1"><span>Describe a process</span><span>Get the SOP</span></h1>
+    <form class="composer glass" id="form" autocomplete="off" aria-label="Describe your process">
+      <label for="desc" class="sr">How the process is done today</label>
+      <textarea id="desc" placeholder="Tap an example below, or describe a process like hotel check-in, onboarding, a refund or opening a store..."></textarea>
+      <div class="tools">
+        <div class="chips" id="chips"></div>
+        <div class="right">
+          <span class="count" id="count"></span>
+          <button type="submit" class="send" id="send" aria-label="Build SOP"><svg viewBox="0 0 14 17" aria-hidden="true"><path d="M6 17V4.1L1.5 8.6 0 7.1 7 0l7 7.1-1.5 1.5L8 4.1V17H6z"/></svg><span class="spin" aria-hidden="true"></span></button>
+        </div>
+      </div>
+    </form>
+    <div class="under">
+      <p class="demo-note"><span class="pill">Demo</span><span>This version uses ready-made SOPs, so it works without sign-in.</span></p>
+      <p class="status" id="status" role="status"></p>
+      <a class="ghost-link" href="#library" id="seeLink">Browse the SOP library</a>
+    </div>
+  </main>
+
+  <!-- LIBRARY -->
+  <main class="page" id="v-library" hidden aria-label="Library">
+    <div class="page-head"><h1>SOP library</h1><input class="search" id="search" type="search" placeholder="Search SOPs" aria-label="Search SOPs"></div>
+    <div id="libBody"></div>
+  </main>
+
+  <!-- SOP -->
+  <main class="page" id="v-sop" hidden aria-label="SOP"></main>
+
+  <!-- HOW -->
+  <main class="page" id="v-how" hidden aria-label="How it works">
+    <div class="page-head"><h1>Plain words in<br>A procedure out</h1><p>Write the task the way you'd explain it to a new hire. SOP Builder does the structure.</p></div>
+    <div class="how">
+      <article class="w" style="--o:0"><div class="card glass"><div class="demo"><div class="mini"><span>Guest arrives, front desk greets…</span><b>↑</b></div></div><span class="num">01</span><h2>Describe it</h2><p>Who does what, in what order, and how fast. Rough notes are fine.</p></div></article>
+      <article class="w" style="--o:1"><div class="card glass"><div class="demo"><div class="mini-steps"><i></i><i></i><i></i></div></div><span class="num">02</span><h2>Get the steps</h2><p>5 to 9 ordered steps with an owner and a time for each, with the ones that can't be skipped marked critical.</p></div></article>
+      <article class="w" style="--o:2"><div class="card glass"><div class="demo"><div class="mini-check"><span class="on"></span><span class="on"></span><span></span><span></span></div></div><span class="num">03</span><h2>Hand it over</h2><p>Download it as PDF or Word, copy it as text, or tick through the checklist.</p></div></article>
+    </div>
+    <div class="actions"><a class="btn primary" href="#home">Try the demo <span aria-hidden="true">↗</span></a></div>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- data: ready-made SOPs ---------- */
+const EX=[
+  {n:"Hotel check-in",id:"hotel",i:'<path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 15h18M7 10V7h5v3"/>',d:"Hotel guest check-in. Guest arrives at reception. Front desk greets them, finds the booking, checks ID, takes a card for incidentals, assigns a room, explains breakfast and wifi, hands over keys and has a bellboy take bags up. Aim for under 5 minutes."},
+  {n:"Onboarding",id:"onboard",i:'<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>',d:"New employee onboarding. Before day one HR sends the offer documents and IT sets up email and laptop. On day one the manager welcomes them, HR covers policies and payroll forms, IT hands over the laptop, and a buddy is assigned. Check-ins at week one and month one."},
+  {n:"Refund request",id:"refund",i:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',d:"Refund request. Customer emails asking for a refund. Support checks the order and whether it is within 14 days, asks for photos if the item is damaged, gets approval from the team lead for amounts above ₹5,000, processes the refund and emails the customer."},
+  {n:"Store opening",id:"store",i:'<path d="M4 9.5 5.5 4h13L20 9.5M4 9.5V20h16V9.5M4 9.5h16M10 20v-5h4v5"/>',d:"Daily store opening. Opening staff arrive 30 minutes early, disarm the alarm, switch on lights and billing system, count the cash float, check stock on display shelves, clean the entrance, and open the doors at 10 am."}
+];
+const LIB=[
+ {id:"restaurant",kw:"restaurant table booking reservation dinner lunch concierge member vip whatsapp venue",sop:{
+  title:"Last-Minute VIP Restaurant Booking",code:"SOP-CON-014",owner:"Concierge Lead",sla:"30 min",
+  purpose:"Secure a table for a member at short notice, even at fully booked venues, and keep the member informed throughout.",
+  scope:"Same-day restaurant requests from members received on WhatsApp, phone or email.",
+  trigger:"A member asks for a table for today.",
+  steps:[
+    {action:"Acknowledge the request",detail:"Reply within 5 minutes so the member knows someone is on it.",owner:"Concierge",time:"0–5 min",critical:true},
+    {action:"Confirm the details",detail:"Party size, preferred time window, occasion, seating and dietary needs.",owner:"Concierge",time:"5 min",critical:false},
+    {action:"Check partner contacts",detail:"Look up the restaurant in the partner sheet for a direct manager contact.",owner:"Concierge",time:"5 min",critical:false},
+    {action:"Call the restaurant manager",detail:"Call directly rather than using the booking line. Mention the member's history with the venue.",owner:"Concierge",time:"10 min",critical:true},
+    {action:"Offer two alternatives if it fails",detail:"Similar cuisine and price, confirmed available, within 15 minutes of the original venue.",owner:"Concierge",time:"10 min",critical:false},
+    {action:"Escalate if still unresolved",detail:"At 20 minutes with no table, hand to the Concierge Lead for a senior contact.",owner:"Concierge Lead",time:"at 20 min",critical:false},
+    {action:"Confirm back to the member",detail:"Send venue, time, name on booking and any notes. Ask them to confirm.",owner:"Concierge",time:"by 30 min",critical:true},
+    {action:"Log the request",detail:"Record outcome, contact used and member preferences in the CRM.",owner:"Concierge",time:"After",critical:false}
+  ],
+  checklist:["Acknowledged within 5 minutes","Party size and time confirmed","Manager contacted directly","Alternatives offered if declined","Booking confirmed in writing","CRM updated"],
+  kpis:["Time to first reply","Requests fulfilled at first-choice venue","Requests closed within 30 minutes"],
+  escalation:"If no table is secured within 20 minutes, inform the Concierge Lead, who may use a senior contact or a paid priority partner."}},
+ {id:"hotel",kw:"hotel guest check-in checkin reception front desk room keys arrival booking bellboy",sop:{
+  title:"Hotel Guest Check-in",code:"SOP-FO-003",owner:"Front Office Manager",sla:"Under 5 min",
+  purpose:"Check every guest in quickly and accurately so they reach their room within five minutes of arriving.",
+  scope:"All walk-up check-ins at the main reception desk.",
+  trigger:"A guest arrives at reception to check in.",
+  steps:[
+    {action:"Greet the guest by name",detail:"Stand, make eye contact and welcome them within 30 seconds of arrival.",owner:"Front Desk Agent",time:"0–30 sec",critical:false},
+    {action:"Find and confirm the booking",detail:"Check dates, room type, rate and any special requests with the guest.",owner:"Front Desk Agent",time:"1 min",critical:true},
+    {action:"Verify ID",detail:"Check a valid photo ID against the booking name and record it in the system.",owner:"Front Desk Agent",time:"1 min",critical:true},
+    {action:"Take a card for incidentals",detail:"Pre-authorise the card and explain what the hold covers.",owner:"Front Desk Agent",time:"1 min",critical:false},
+    {action:"Assign the room and issue keys",detail:"Confirm the room is clean and ready before encoding keys.",owner:"Front Desk Agent",time:"1 min",critical:true},
+    {action:"Explain key information",detail:"Breakfast timings, wifi details, checkout time and how to reach the desk.",owner:"Front Desk Agent",time:"1 min",critical:false},
+    {action:"Hand over to the bell desk",detail:"The bellboy takes the luggage and shows the guest to the room.",owner:"Bell Desk",time:"After keys",critical:false}
+  ],
+  checklist:["Guest greeted within 30 seconds","Booking details confirmed","ID verified and recorded","Card pre-authorised","Room confirmed ready","Breakfast, wifi and checkout explained","Bags taken to the room"],
+  kpis:["Average check-in time","Check-ins completed under 5 minutes","Room-not-ready complaints"],
+  escalation:"If the room isn't ready or the booking can't be found, the agent calls the Front Office Manager, who offers the guest a seat, a drink and a firm time."}},
+ {id:"onboard",kw:"new employee onboarding joiner hire hr it laptop day one manager buddy induction",sop:{
+  title:"New Employee Onboarding",code:"SOP-HR-007",owner:"HR Manager",sla:"Day 1 ready, 30-day review",
+  purpose:"Give every new joiner everything they need on day one and a clear first month.",
+  scope:"All full-time hires, from offer acceptance to the end of their first month.",
+  trigger:"A candidate accepts the offer.",
+  steps:[
+    {action:"Send joining documents",detail:"Offer letter, policies and payroll forms sent for signature before day one.",owner:"HR",time:"Before day 1",critical:true},
+    {action:"Set up email and laptop",detail:"Accounts created and the laptop configured and tested.",owner:"IT",time:"Before day 1",critical:true},
+    {action:"Welcome the new joiner",detail:"The manager meets them, introduces the team and explains the first week.",owner:"Manager",time:"Day 1, morning",critical:false},
+    {action:"Cover policies and payroll",detail:"HR walks through key policies and collects any pending forms.",owner:"HR",time:"Day 1",critical:false},
+    {action:"Hand over the laptop",detail:"IT hands over the laptop and confirms every login works.",owner:"IT",time:"Day 1",critical:false},
+    {action:"Assign a buddy",detail:"A teammate who answers day-to-day questions for the first month.",owner:"Manager",time:"Day 1",critical:false},
+    {action:"Hold week-one and month-one check-ins",detail:"Review progress, answer questions and agree the next goals.",owner:"Manager",time:"Week 1, Month 1",critical:true}
+  ],
+  checklist:["Documents signed before day one","Email and laptop ready","Manager welcome held","Policies covered","Buddy assigned","Week-one check-in done","Month-one review done"],
+  kpis:["Joiners with working laptop on day one","Week-one check-ins completed","New-joiner satisfaction at 30 days"],
+  escalation:"If the laptop or accounts aren't ready by day one, the manager informs the HR Manager, who agrees a fix time with IT that morning."}},
+ {id:"refund",kw:"refund return customer support money back order damaged complaint email approval",sop:{
+  title:"Customer Refund Request",code:"SOP-CS-011",owner:"Support Team Lead",sla:"48 hours",
+  purpose:"Handle refund requests fairly and quickly, with the right approvals for larger amounts.",
+  scope:"Refund requests received by email for orders placed online or in store.",
+  trigger:"A customer emails asking for a refund.",
+  steps:[
+    {action:"Acknowledge the email",detail:"Confirm receipt and tell the customer when they'll hear back.",owner:"Support Agent",time:"Within 4 h",critical:false},
+    {action:"Check the order",detail:"Find the order and confirm it falls within the 14-day refund window.",owner:"Support Agent",time:"Same day",critical:true},
+    {action:"Ask for photos if damaged",detail:"Request clear photos of any damage before approving.",owner:"Support Agent",time:"Same day",critical:false},
+    {action:"Get approval above ₹5,000",detail:"Refunds above ₹5,000 need the Team Lead's approval.",owner:"Support Team Lead",time:"Within 24 h",critical:true},
+    {action:"Process the refund",detail:"Refund to the original payment method and note the reference.",owner:"Support Agent",time:"Within 48 h",critical:true},
+    {action:"Email the customer",detail:"Confirm the amount, the reference and when the money will arrive.",owner:"Support Agent",time:"Same day",critical:false}
+  ],
+  checklist:["Email acknowledged","Order within 14 days","Photos received if damaged","Approval for amounts above ₹5,000","Refund processed","Customer informed with reference"],
+  kpis:["Time from request to refund","Refunds needing a second follow-up","Customer satisfaction after refund"],
+  escalation:"If a request falls outside the policy but the customer pushes back, the agent passes it to the Team Lead, who decides within one working day."}},
+ {id:"store",kw:"store shop opening open retail morning cash float alarm billing stock shelves doors",sop:{
+  title:"Daily Store Opening",code:"SOP-RT-002",owner:"Store Manager",sla:"10:00 am",
+  purpose:"Open the store on time every day, safe, clean and ready to sell.",
+  scope:"All retail stores, every trading day.",
+  trigger:"Opening staff arrive at 9:30 am.",
+  steps:[
+    {action:"Arrive and disarm the alarm",detail:"Two staff arrive together 30 minutes before opening and disarm the alarm.",owner:"Opening Staff",time:"9:30 am",critical:true},
+    {action:"Switch on lights and systems",detail:"Lights, billing system and card machines on and tested.",owner:"Opening Staff",time:"9:35 am",critical:false},
+    {action:"Count the cash float",detail:"Count the float, match it to the closing record and sign the log.",owner:"Shift Lead",time:"9:40 am",critical:true},
+    {action:"Check display stock",detail:"Refill gaps on display shelves and check price tags.",owner:"Opening Staff",time:"9:45 am",critical:false},
+    {action:"Clean the entrance",detail:"Sweep the entrance and wipe the glass doors.",owner:"Opening Staff",time:"9:50 am",critical:false},
+    {action:"Open the doors",detail:"Unlock and open exactly at 10:00 am.",owner:"Shift Lead",time:"10:00 am",critical:true}
+  ],
+  checklist:["Alarm disarmed","Billing and card machines working","Cash float counted and signed","Display shelves stocked","Entrance clean","Doors open at 10:00 am"],
+  kpis:["Days opened on time","Cash float mismatches","Display gaps found at opening"],
+  escalation:"If the float doesn't match or a system fails, the Shift Lead calls the Store Manager before opening the doors."}}
+];
+
+let view={sop:LIB[0].sop,mode:"library"},busy=false,timer=0,matchNote="";
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const svg=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const I={copy:svg('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>'),
+  pdf:svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15l3 3 3-3"/>')};
+const fmtDate=ms=>new Date(ms).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+const slug=s=>String(s||"SOP").replace(/[^\w\s-]/g,"").trim().replace(/\s+/g,"-").slice(0,60)||"SOP";
+let toastT=0;
+function toast(msg,err){const t=$("toast");t.textContent=msg;t.className="toast show"+(err?" err":"");clearTimeout(toastT);toastT=setTimeout(()=>t.className="toast",3200)}
+
+/* ---------- composer ---------- */
+$("chips").innerHTML=EX.map((e,k)=>`<button type="button" class="chip" data-k="${k}">${svg(e.i)}<span>${e.n}</span></button>`).join("");
+$("chips").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b)return;$("desc").value=EX[+b.dataset.k].d;grow();count();setStatus("");$("desc").focus()});
+function grow(){const t=$("desc");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,innerHeight*.4)+"px"}
+function count(){const w=$("desc").value.trim().split(/\s+/).filter(Boolean).length;$("count").textContent=w?`${w} words`:""}
+$("desc").addEventListener("input",()=>{grow();count()});
+$("desc").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();$("form").requestSubmit()}});
+function setStatus(t,err){$("status").textContent=t;$("status").className="status"+(err?" err":"")}
+function setBusy(b){busy=b;$("send").setAttribute("aria-busy",b);$("seeLink").hidden=b}
+
+/* demo: pick the ready-made SOP that best matches the description */
+function bestMatch(desc){
+  const words=desc.toLowerCase().replace(/[^a-z0-9\s-]/g," ").split(/\s+/).filter(w=>w.length>2);
+  let best=null,score=0;
+  for(const x of LIB){const kw=x.kw.split(" ");const s=words.filter(w=>kw.some(k=>k.startsWith(w)||w.startsWith(k))).length;if(s>score){score=s;best=x}}
+  return {item:best||LIB[0],score};
+}
+$("form").addEventListener("submit",e=>{
+  e.preventDefault();if(busy)return;
+  const desc=$("desc").value.trim();
+  if(desc.split(/\s+/).length<6){setStatus("Describe the process in a sentence or two first, or tap an example.",true);$("desc").focus();return}
+  const {item,score}=bestMatch(desc);
+  const exact=EX.some(x=>x.d===desc);
+  setBusy(true);setStatus("Writing your SOP…");
+  clearTimeout(timer);
+  timer=setTimeout(()=>{
+    setBusy(false);setStatus("");
+    matchNote=exact?"":score?`This demo has ${LIB.length} ready-made SOPs, so it's showing the closest one to what you wrote. The full version writes a new SOP for any process.`:`This demo has ${LIB.length} ready-made SOPs and none matched closely, so here's an example. The full version writes a new SOP for any process.`;
+    view={sop:item.sop,mode:"built"};
+    location.hash="sop";if(location.hash==="#sop")route();
+  },1400);
+});
+
+/* ---------- SOP view ---------- */
+function renderSop(){
+  const s=view.sop;
+  const steps=s.steps||[],list=s.checklist||[],kpis=s.kpis||[];
+  const roles=new Set(steps.map(x=>(x.owner||"").trim()).filter(Boolean)),crit=steps.filter(x=>x.critical).length;
+  const pill=view.mode==="built"?'<span class="pill live">Built from your description</span>':'<span class="pill">SOP library</span>';
+  $("v-sop").innerHTML=`
+    ${view.mode==="built"&&matchNote?`<p class="match glass w">${esc(matchNote)}</p>`:""}
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">${pill}<span>${esc(s.code||"SOP-001")} · Rev 1.0 · ${fmtDate(Date.now())}</span></div>
+        <h1>${esc(s.title)}</h1>
+      </div>
+      <p>${esc(s.purpose)}</p>
+    </div>
+
+    <div class="summary">
+      <div class="w" style="--o:0"><div class="card glass stat"><b>${steps.length}</b><span>Steps</span></div></div>
+      <div class="w" style="--o:1"><div class="card glass stat crit"><b>${crit}</b><span>Critical steps</span></div></div>
+      <div class="w" style="--o:2"><div class="card glass stat"><b>${roles.size}</b><span>${roles.size===1?"Role":"Roles"}</span></div></div>
+      <div class="w" style="--o:3"><div class="card glass stat"><b>${esc(s.sla||"—")}</b><span>Target time</span></div></div>
+    </div>
+
+    <div class="facts">
+      <div class="w" style="--o:2"><div class="card glass"><p class="label">Process owner</p><h2>${esc(s.owner||"—")}</h2></div></div>
+      <div class="w" style="--o:3"><div class="card glass"><p class="label">Starts when</p><p>${esc(s.trigger)}</p></div></div>
+      <div class="w" style="--o:4"><div class="card glass"><p class="label">Applies to</p><p>${esc(s.scope)}</p></div></div>
+    </div>
+
+    <h2 class="section-title">Procedure</h2>
+    <ol class="steps">${steps.map((st,i)=>`
+      <li class="w" style="--o:${Math.min(i+3,10)}"><div class="card glass step${st.critical?" is-crit":""}">
+        <div class="step-top"><span class="num">${String(i+1).padStart(2,"0")}</span>${st.critical?'<span class="pill crit">Critical</span>':''}</div>
+        <h2>${esc(st.action)}</h2>
+        ${st.detail?`<p>${esc(st.detail)}</p>`:""}
+        <div class="step-meta">${st.owner?`<span>${esc(st.owner)}</span>`:""}${st.time?`<span>${esc(st.time)}</span>`:""}</div>
+      </div></li>`).join("")}
+    </ol>
+
+    <div class="lower">
+      <div class="w" style="--o:4"><div class="card glass">
+        <p class="label"><span>Completion checklist</span><span id="prog"></span></p>
+        <div class="bar"><span id="pfill"></span></div>
+        <ul class="checks">${list.map((c,i)=>`<li><label for="ck${i}"><input type="checkbox" id="ck${i}"><span>${esc(c)}</span></label></li>`).join("")}</ul>
+      </div></div>
+      <div class="stack">
+        <div class="w" style="--o:5"><div class="card glass"><p class="label">How to measure it</p><ul class="kpis">${kpis.map(k=>`<li>${esc(k)}</li>`).join("")}</ul></div></div>
+        <div class="w" style="--o:6"><div class="card glass esc-card"><p class="label" style="color:#ffd0b0">If it goes wrong</p><p>${esc(s.escalation)}</p></div></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn primary" id="aPdf">${I.pdf}Download PDF</button>
+      <button type="button" class="btn" id="aDocx">${I.pdf}Download Word</button>
+      <button type="button" class="btn" id="aCopy">${I.copy}Copy as text</button>
+      <button type="button" class="btn" id="aReset">Uncheck all</button>
+      <a class="btn" href="#home">Build another <span aria-hidden="true">↗</span></a>
+    </div>`;
+  $("aPdf").onclick=()=>exportPdf(s);
+  $("aDocx").onclick=()=>exportDocx(s);
+  $("aCopy").onclick=()=>copy(asText(s),"Copied. Paste it into WhatsApp, Docs or email.");
+  $("aReset").onclick=()=>{document.querySelectorAll(".checks input").forEach(b=>b.checked=false);saveTicks();prog()};
+  loadTicks();prog();
+}
+function prog(){const b=[...document.querySelectorAll(".checks input")],d=b.filter(x=>x.checked).length;if(!$("prog"))return;$("prog").textContent=b.length?`${d} of ${b.length}`:"";$("pfill").style.width=b.length?`${d/b.length*100}%`:"0"}
+const tickKey=()=>"sopdemo-ticks:"+(view.sop.code||"sample");
+function saveTicks(){try{localStorage.setItem(tickKey(),JSON.stringify([...document.querySelectorAll(".checks input")].map(b=>b.checked)))}catch(_){}}
+function loadTicks(){try{const a=JSON.parse(localStorage.getItem(tickKey())||"[]");document.querySelectorAll(".checks input").forEach((b,i)=>b.checked=!!a[i])}catch(_){}}
+document.addEventListener("change",e=>{if(e.target.matches(".checks input")){saveTicks();prog()}});
+
+/* ---------- library ---------- */
+function libCard(x,i){const st=x.sop.steps||[];return `
+    <article class="w" style="--o:${Math.min(i,8)}"><div class="card glass lib-card" data-id="${esc(x.id)}">
+      <div class="eyebrow" style="margin:0"><span>${esc(x.sop.code||"")}</span></div>
+      <h2>${esc(x.sop.title)}</h2>
+      <p>${esc(x.sop.purpose||"")}</p>
+      <div class="lib-meta"><span>${st.length} steps</span><span>${st.filter(s=>s.critical).length} critical</span>${x.sop.sla?`<span>${esc(x.sop.sla)}</span>`:""}</div>
+      <div class="lib-actions"><button type="button" class="btn primary" data-act="open">Open</button></div>
+    </div></article>`}
+function renderLib(){
+  const q=$("search").value.trim().toLowerCase();
+  const items=LIB.filter(x=>!q||(x.sop.title+" "+x.sop.purpose+" "+x.kw).toLowerCase().includes(q));
+  $("libBody").innerHTML=`<div class="lib-sec"><div class="lib-head"><p class="lib-sub">Open any SOP to see how it works: steps with owners and timings, a checklist, and PDF or Word downloads.</p></div>
+    ${items.length?`<div class="lib">${items.map(libCard).join("")}</div>`:`<p class="status">No SOPs match “${esc(q)}”.</p>`}</div>`;
+}
+$("search").addEventListener("input",renderLib);
+$("libBody").addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;
+  const it=LIB.find(x=>x.id===b.closest("[data-id]").dataset.id);if(!it)return;
+  view={sop:it.sop,mode:"library"};location.hash="sop";if(location.hash==="#sop")route();
+});
+
+/* ---------- export ---------- */
+function asText(s){
+  const L=[`${s.title}`,`${s.code||""} · Owner: ${s.owner||""} · Target: ${s.sla||""}`,"",`Purpose: ${s.purpose}`,`Scope: ${s.scope}`,`Trigger: ${s.trigger}`,"","PROCEDURE"];
+  (s.steps||[]).forEach((st,i)=>L.push(`${i+1}. ${st.action}${st.critical?" [CRITICAL]":""} (${st.owner||""}, ${st.time||""})`,`   ${st.detail||""}`));
+  L.push("","CHECKLIST",...(s.checklist||[]).map(c=>`[ ] ${c}`),"","MEASURE",...(s.kpis||[]).map(k=>`- ${k}`),"",`ESCALATION: ${s.escalation||""}`);
+  return L.join("\n");
+}
+async function copy(text,ok){
+  try{await navigator.clipboard.writeText(text);toast(ok)}
+  catch{toast("Couldn't copy here. Try the PDF or Word download instead.",true)}
+}
+function save(filename,blob){
+  try{const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast("Downloaded "+filename)}
+  catch(_){toast("Couldn't download the file here.",true)}
+}
+const pdfSafe=s=>String(s??"").replace(/₹\s?/g,"Rs. ").replace(/[–—]/g,"-").replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,"...").replace(/[^\x00-\xFF]/g,"");
+
+function exportPdf(s){
+  if(!window.jspdf){toast("The PDF tool didn't load. Check your connection and try again.",true);return}
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:"pt",format:"a4"});
+  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=54,CW=W-M*2;let y=0;
+  const ink=[19,26,38],grey=[95,108,122],accent=[18,96,140],warn=[194,65,12],rule=[220,226,232];
+  const need=h=>{if(y+h>H-M){doc.addPage();y=M}};
+  const text=(str,{size=10.5,style="normal",color=ink,indent=0,gap=4,lh=1.35}={})=>{
+    doc.setFont("helvetica",style);doc.setFontSize(size);doc.setTextColor(...color);
+    const lines=doc.splitTextToSize(pdfSafe(str),CW-indent);
+    lines.forEach(l=>{need(size*lh);doc.text(l,M+indent,y+size);y+=size*lh});y+=gap;
+  };
+  const heading=t=>{y+=10;need(30);doc.setDrawColor(...rule);doc.setLineWidth(.8);doc.line(M,y,W-M,y);y+=12;text(t.toUpperCase(),{size:9,style:"bold",color:accent,gap:6})};
+  doc.setFillColor(15,23,32);doc.rect(0,0,W,86,"F");
+  doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(181,229,255);doc.text("SOP BUILDER",M,34);
+  doc.setFont("helvetica","normal");doc.setTextColor(210,220,228);doc.text(pdfSafe(`${s.code||"SOP-001"}  ·  Rev 1.0  ·  ${fmtDate(Date.now())}`),M,54);
+  doc.text(pdfSafe(`Owner: ${s.owner||"-"}   ·   Target time: ${s.sla||"-"}`),M,70);
+  y=118;
+  text(s.title,{size:22,style:"bold",gap:8,lh:1.2});
+  text(s.purpose,{size:11.5,color:grey,gap:10});
+  heading("Details");
+  [["Starts when",s.trigger],["Applies to",s.scope],["Process owner",s.owner]].forEach(([k,v])=>{text(k,{size:9,style:"bold",color:grey,gap:1});text(v,{gap:8})});
+  heading("Procedure");
+  (s.steps||[]).forEach((st,i)=>{
+    need(48);
+    doc.setFont("helvetica","bold");doc.setFontSize(11.5);doc.setTextColor(...accent);doc.text(String(i+1).padStart(2,"0"),M,y+11.5);
+    const before=y;text(st.action,{size:11.5,style:"bold",indent:28,gap:2});
+    if(st.critical){doc.setFont("helvetica","bold");doc.setFontSize(8);const tw=doc.getTextWidth("CRITICAL")+10;doc.setFillColor(253,236,227);doc.roundedRect(W-M-tw,before+1,tw,14,3,3,"F");doc.setTextColor(...warn);doc.text("CRITICAL",W-M-tw+5,before+11)}
+    if(st.detail)text(st.detail,{indent:28,gap:2});
+    text([st.owner,st.time].filter(Boolean).join("  ·  "),{size:9,color:grey,indent:28,gap:10});
+  });
+  heading("Completion checklist");
+  (s.checklist||[]).forEach(c=>{need(18);doc.setDrawColor(...grey);doc.setLineWidth(.9);doc.rect(M,y+2,10,10);text(c,{indent:20,gap:5})});
+  heading("How to measure it");
+  (s.kpis||[]).forEach(k=>text("•  "+k,{gap:4}));
+  heading("If it goes wrong");
+  text(s.escalation,{gap:4});
+  const pages=doc.getNumberOfPages();
+  for(let p=1;p<=pages;p++){doc.setPage(p);doc.setFont("helvetica","normal");doc.setFontSize(8.5);doc.setTextColor(...grey);doc.text(pdfSafe(`${s.title}  ·  ${s.code||""}`),M,H-28);doc.text(`Page ${p} of ${pages}`,W-M,H-28,{align:"right"})}
+  save(slug(s.title)+".pdf",doc.output("blob"));
+}
+
+const xe=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function run(t,{b,sz=22,color,font="Calibri"}={}){return `<w:r><w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${font}"/>${b?"<w:b/>":""}${color?`<w:color w:val="${color}"/>`:""}<w:sz w:val="${sz}"/></w:rPr><w:t xml:space="preserve">${xe(t)}</w:t></w:r>`}
+function para(runs,{after=120,before=0,ind=0,border=false,shade}={}){return `<w:p><w:pPr>${border?'<w:pBdr><w:top w:val="single" w:sz="6" w:space="6" w:color="DCE2E8"/></w:pBdr>':""}${shade?`<w:shd w:val="clear" w:color="auto" w:fill="${shade}"/>`:""}<w:spacing w:before="${before}" w:after="${after}"/>${ind?`<w:ind w:left="${ind}"/>`:""}</w:pPr>${runs}</w:p>`}
+async function exportDocx(s){
+  if(!window.JSZip){toast("The Word tool didn't load. Check your connection and try again.",true);return}
+  const H=t=>para(run(t.toUpperCase(),{b:true,sz:18,color:"12608C"}),{before:280,after:120,border:true});
+  let body="";
+  body+=para(run("SOP BUILDER",{b:true,sz:16,color:"12608C"})+run(`   ${s.code||"SOP-001"} · Rev 1.0 · ${fmtDate(Date.now())}`,{sz:16,color:"5F6C7A"}),{after:200});
+  body+=para(run(s.title,{b:true,sz:44}),{after:120});
+  body+=para(run(s.purpose,{sz:24,color:"5F6C7A"}),{after:160});
+  body+=para(run("Owner: ",{b:true,sz:20})+run(s.owner||"-",{sz:20})+run("     Target time: ",{b:true,sz:20})+run(s.sla||"-",{sz:20}),{after:120});
+  body+=H("Details");
+  [["Starts when",s.trigger],["Applies to",s.scope]].forEach(([k,v])=>{body+=para(run(k,{b:true,sz:18,color:"5F6C7A"}),{after:20});body+=para(run(v),{after:140})});
+  body+=H("Procedure");
+  (s.steps||[]).forEach((st,i)=>{
+    body+=para(run(String(i+1).padStart(2,"0")+"   ",{b:true,sz:24,color:"12608C"})+run(st.action,{b:true,sz:24})+(st.critical?run("   CRITICAL",{b:true,sz:16,color:"C2410C"}):""),{before:120,after:40});
+    if(st.detail)body+=para(run(st.detail),{ind:560,after:30});
+    body+=para(run([st.owner,st.time].filter(Boolean).join("  ·  "),{sz:18,color:"5F6C7A"}),{ind:560,after:100});
+  });
+  body+=H("Completion checklist");
+  (s.checklist||[]).forEach(c=>{body+=para(run("☐  ",{sz:24,font:"Segoe UI Symbol"})+run(c),{after:60})});
+  body+=H("How to measure it");
+  (s.kpis||[]).forEach(k=>{body+=para(run("•  ")+run(k),{after:60})});
+  body+=H("If it goes wrong");
+  body+=para(run(s.escalation),{after:60,shade:"FDECE3"});
+  const docXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const zip=new JSZip();
+  zip.file("[Content_Types].xml",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+  zip.file("_rels/.rels",`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  zip.file("word/document.xml",docXml);
+  const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+  save(slug(s.title)+".docx",blob);
+}
+
+/* ---------- WebGL shaders ---------- */
+const VS="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+const FS={
+home:`precision highp float;uniform vec2 resolution;uniform float time;
+float random(in float x){return fract(sin(x)*1e4);}
+void main(){vec2 uv=(gl_FragCoord.xy*2.0-resolution.xy)/min(resolution.x,resolution.y);
+vec2 m=vec2(4.0,2.0);vec2 s=vec2(256.0,256.0);
+uv.x=floor(uv.x*s.x/m.x)/(s.x/m.x);uv.y=floor(uv.y*s.y/m.y)/(s.y/m.y);
+float t=time*0.06+random(uv.x)*0.4;float lw=0.0008;vec3 c=vec3(0.0);
+for(int j=0;j<3;j++){for(int i=0;i<5;i++){c[j]+=lw*float(i*i)/abs(fract(t-0.01*float(j)+float(i)*0.01)*1.0-length(uv));}}
+gl_FragColor=vec4(c[2],c[1],c[0],1.0);}`,
+sop:`precision highp float;uniform vec2 resolution;uniform float time;
+void main(){vec2 uv=(gl_FragCoord.xy*2.0-resolution.xy)/min(resolution.x,resolution.y);
+float t=time*0.05;float lw=0.002;vec3 c=vec3(0.0);
+for(int j=0;j<3;j++){for(int i=0;i<5;i++){c[j]+=lw*float(i*i)/abs(fract(t-0.01*float(j)+float(i)*0.01)*5.0-length(uv)+mod(uv.x+uv.y,0.2));}}
+vec3 base=vec3(0.105,0.175,0.255);gl_FragColor=vec4(base+c*(1.0-base),1.0);}`,
+how:`precision highp float;uniform vec2 resolution;uniform float time;
+void main(){vec2 uv=(gl_FragCoord.xy*2.0-resolution.xy)/min(resolution.x,resolution.y);
+float t=time*0.075;vec3 light=vec3(0.0);
+for(int i=0;i<7;i++){float f=float(i);
+float wave=-0.92+f*0.145+0.26*sin(uv.x*1.1+t+f*0.18)+0.16*uv.x*uv.x+0.045*sin(uv.x*3.1-t*0.7+f*0.3);
+float d=uv.y-wave;float env=0.62+0.38*sin(uv.x*0.75+f*0.7+t*0.4);
+vec3 sp=vec3(exp(-abs(d-0.018)*55.0),exp(-abs(d)*63.0),exp(-abs(d+0.026)*48.0));
+vec3 gc=mix(vec3(0.16,0.38,0.85),vec3(0.88,0.40,0.16),0.5+0.5*sin(uv.x*1.5+f*0.7+t*0.35));
+float glow=exp(-abs(d)*8.0);float core=exp(-d*d*7200.0);
+light+=(sp*0.68+gc*glow*0.25+core*0.19)*env;}
+float calm=1.0-0.52*exp(-dot(uv*vec2(0.75,1.05),uv*vec2(0.75,1.05))*1.7);light*=calm;
+light=1.0-exp(-light*1.35);float vig=1.0-0.25*smoothstep(0.7,2.5,length(uv));
+vec3 base=vec3(0.18,0.125,0.23);gl_FragColor=vec4(base+light*vig*(1.0-base),1.0);}`
+};
+const reduced=matchMedia("(prefers-reduced-motion: reduce)");
+const canvas=$("gl");let gl=null,progs={},active=null,t=1,raf=0,lastT=0;
+try{gl=canvas.getContext("webgl",{antialias:false,premultipliedAlpha:false})}catch(_){}
+function compile(fs){
+  const mk=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s};
+  const p=gl.createProgram();gl.attachShader(p,mk(gl.VERTEX_SHADER,VS));gl.attachShader(p,mk(gl.FRAGMENT_SHADER,fs));gl.bindAttribLocation(p,0,"p");gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
+  return {p,res:gl.getUniformLocation(p,"resolution"),time:gl.getUniformLocation(p,"time")};
+}
+if(gl){
+  try{
+    const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+    for(const k in FS)progs[k]=compile(FS[k]);
+  }catch(err){console.warn("Shader unavailable",err.message);gl=null}
+}
+function resize(){if(!gl)return;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(innerWidth*dpr);canvas.height=Math.round(innerHeight*dpr);gl.viewport(0,0,canvas.width,canvas.height);draw()}
+function draw(){if(!gl||!active)return;gl.useProgram(active.p);gl.uniform2f(active.res,canvas.width,canvas.height);gl.uniform1f(active.time,t);gl.drawArrays(gl.TRIANGLES,0,6)}
+function loop(now){if(document.hidden||reduced.matches){raf=0;return}const dt=lastT?Math.min(now-lastT,50):16;lastT=now;t+=dt*0.003;draw();raf=requestAnimationFrame(loop)}
+function sync(){cancelAnimationFrame(raf);raf=0;lastT=0;if(!gl)return;if(reduced.matches||document.hidden){draw();return}raf=requestAnimationFrame(loop)}
+function setShader(k){if(!gl)return;active=progs[k];t=1;draw()}
+addEventListener("resize",resize);document.addEventListener("visibilitychange",sync);reduced.addEventListener("change",sync);
+canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();cancelAnimationFrame(raf)});
+
+/* ---------- routing ---------- */
+const views={home:$("v-home"),library:$("v-library"),sop:$("v-sop"),how:$("v-how")};
+const SHADER={home:"home",library:"how",sop:"sop",how:"how"};
+function route(){
+  const h=location.hash.slice(1),v=views[h]?h:"home";
+  for(const k in views){views[k].hidden=k!==v;views[k].classList.remove("arrive")}
+  if(v==="sop")renderSop();
+  if(v==="library")renderLib();
+  void views[v].offsetWidth;views[v].classList.add("arrive");
+  document.querySelectorAll(".links a,.drop a").forEach(a=>a.getAttribute("href")==="#"+v?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
+  closeMenu();setShader(SHADER[v]);scrollTo(0,0);
+  if(v==="home")setTimeout(grow,0);
+}
+function closeMenu(){$("drop").classList.remove("open");$("burger").setAttribute("aria-expanded","false")}
+$("burger").onclick=()=>{const o=$("drop").classList.toggle("open");$("burger").setAttribute("aria-expanded",o)};
+addEventListener("hashchange",route);
+addEventListener("keydown",e=>{if(e.key==="Escape"){if($("drop").classList.contains("open"))closeMenu();else if(location.hash&&location.hash!=="#home")location.hash="home"}});
+
+resize();route();sync();
+</script>
+</body>
+</html>
